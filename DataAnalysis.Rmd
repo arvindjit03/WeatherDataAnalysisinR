@@ -8,6 +8,8 @@ library("tidyr")
 library("moments")
 library("writexl")
 #library("ggplot2")
+
+
 ```
 
 ```{r}
@@ -274,6 +276,14 @@ df_max_data = dfdata[,c("Max.Temperature"), drop=FALSE]
 #data_plot = data.frame(num_seq, df_max_data, check.rows=TRUE)
 #ggplot(data = data_plot, mapping= aes(x= num_seq, y= df_max_data)) + geom_line()
 print(df_max_data)
+
+# Read max temperature data and find its statistical parameters 
+df_max_data = dfdata[,c("Max.Temperature"), drop=FALSE]
+#plot line graph 
+data_plot = data.frame(num_seq, df_max_data, check.rows=TRUE)
+ggplot(data = data_plot, mapping= aes(x= num_seq, y= df_max_data)) + geom_line()
+#print(df_max_data)
+
 # find number of missing values
 sprintf("Number of missing values in Max. Temperature = %s", sum(is.na(df_max_data)))
 # maximum and minimum values
@@ -282,9 +292,15 @@ df_max_data <- drop_na(df_max_data)
 df_max_data <- as.numeric(unlist(df_max_data))
 # remove temperature above 50 degrees
 sprintf("Number of values greater than 50 = %s" , sum(df_max_data > 50))
+
 #df_max_data <- subset(df_max_data, df_max_data <= 50)
 # plot histogram for max temperature
 #hist(df_max_data , col="lightblue", breaks = 500)
+
+df_max_data <- subset(df_max_data, df_max_data <= 50)
+# plot histogram for max temperature
+hist(df_max_data , col="lightblue", breaks = 500)
+
 #find skewness and Kurtosis
 sprintf("Skewness of Maximum temperature = %s", skewness(df_max_data))
 sprintf("Kurtosis of Maximum temperature = %s", kurtosis(df_max_data))

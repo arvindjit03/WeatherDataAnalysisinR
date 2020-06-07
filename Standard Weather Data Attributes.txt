@@ -1,0 +1,149 @@
+Standard attributes of weather data:
+
+ABBREVIATIONS USED FOR DAILY SURFACE TAB3 DATA :
+----------------------------------------------
+  INDEX = INDEX NO. OF THE STATION
+  MN    = MONTH
+  HR    = HOUR IN UTC
+          UTC   IST   UTC   IST   UTC   IST   UTC   IST
+           00   0530   03   0830   06   1130   09   1430
+           12   1730   15   2030   18   2330   21   0230
+  DT    = DATE
+  SLP   = STATION LEVEL PRESSURE (in hpa)
+  MSLP  = MEAN SEA-LEVEL PRESSURE (in hpa) OR HEIGHT IN GEOPOTENTIAL METERS
+          FROM THE NEAREST STANDARD LEVEL, IF STATION HEIGHT IS ABOVE 800 GPM
+  DBT   = DRY BULB TEMPERATURE (in deg. C)
+  WBT   = WET BULB TEMPERATURE (in deg. C)
+  DPT   = DEW POINT TEMPERATURE (in deg. C)
+  RH    = RELATIVE HUMIDITY (in %)
+  VP    = VAPOUR PRESSURE (in hpa)
+  DD    = WIND DIRECTION (in 16 points of compass)
+  FFF   = WIND SPEED (in Kmph)
+  AW    = AVERAGE WIND SPEED (in kmph) AVAILABLE ONLY FOR 0830 AND 1730 HRS IST
+          OBSERVATIONS. IN CASE OF 0830 HRS, IT REPRESENTS AVERAGE WIND SPEED
+          FROM 1730 HRS OF PREVIOUS DAY TO THE 0830 HRS OF PRESENT DAY.
+          IN CASE OF 1730 HRS, IT MEANS AVERAGE SPEED FROM 0830 TO
+          1730 HRS OF THE SAME DAY.
+  VV    = VISIBILITY (in code)
+          Code    Day light observations                    Night observations
+           90     Objects not visible at 50 meters            100 meters
+           91     Objects visible at 50 meters but            330 meters
+                  not at 200 meters
+           92     Objects visible at 200 meters but           740 meters
+                  not at 500 meters
+           93     Objects visible at 500 meters but          1340 meters
+                  not at 1000 meters
+           94     Objects visible at 1000 meters but         2330 meters
+                  not at 2000 meters
+           95     Objects visible at 2000 meters but         4000 meters
+                  not at 4000 meters
+           96     Objects visible at 4000 meters but         7500 meters
+                  not at 10000 meters
+           97     Objects visible at 10000 meters but       12000 meters
+                  not at 20000 meters
+           98     Objects visible at 20000 meters but
+                  not at 50000 meters
+           99     Objects visible at 50000 meters or more
+  Cl    = FORM OF LOW CLOUD
+          Code  description
+           0 - No Stratocumulus, Stratus, Cumulus or Cumulonimbus clouds
+           1 - Cumulus cloud with little vertical extent
+           2 - Cumulus cloud with moderate or strong vertical extent
+           3 - Cumulonimbus not in the form of anvil
+           4 - Stratocumulus formed by spreading out of Cumulus
+           5 - Stratocumulus not formed by spreading out of Cumulus
+           6 - Stratus in a more or less continuous sheet or layer
+           7 - Stratus of bad weather
+           8 - Cumulus and stratocumulus other than that formed from spreading  of Cumulus
+           9 - Cumulonimbus often in the form of anvil
+           / - low cloud(s) invisible owing to darkness, fog, blowing dust etc.
+  A     = AMOUNT OF LOW CLOUD (in oktas)
+  Cm    = FORM OF MEDIUM CLOUD (in codes)
+          Code  description
+           0 - No altocumulus, Altostratus, or Nimbostratus clouds
+           1 - Altostratus, the greater part of which is semi-transparent
+           2 - Altostratus, the greater part of which is sufficiently dense
+           3 - Altocumulus, the greater part of which is semi-transparent
+           4 - Patches of Altocumulus, the greater part of which is semi-transparent
+           5 - Semi-transparent Altocumulus in bands progressively invading the sky
+           6 - Altocumulus resulting from the spreading out of Cumulus
+           7 - Altocumulus in two or more layers usually opaque in places
+           8 - Altocumulus sprouting in the form of small towers
+           9 - Altocumulus of a chaotic sky, generally at several levels
+           / - Medium cloud(s) invisible owing to darkness, fog, blowing dust etc.
+  A     = AMOUNT OF MEDIUM CLOUD (in oktas)
+  Ch    = FORM OF HIGH CLOUD (in code)
+          Code  description
+           0 - No Cirrus, Cirrocumulus, or Cirrostratus clouds
+           1 - Cirrus in the form of hooks progressively invading the sky
+           2 - Dense Cirrus having the appearance of cumuliform tufts
+           3 - Dense Cirrus often in the form of an anvil
+           4 - Cirrus in the form of hooks progressively invading the sky becoming dense
+           5 - Cirrus often in bands converging towards horizon but the continuous veil  does not reach 45 degree above the horizon
+           6 - Cirrus often in bands converging towards horizon but the continuous veil  extends more than 45 degree above the horizon
+           7 - Veil of Cirrostratus covering the celestial dome
+           8 - Cirrostratus not progressively invading the sky and not covering the  celestial dome completely
+           9 - Cirrocumulus/Cirrostratus/Cirrus but Cirrocumulus is predominant
+           / - High cloud(s) invisible owing to darkness, fog, blowing dust etc.
+  A     = AMOUNT OF HIGH CLOUD (in oktas)
+  Dl    = DIRECTION OF LOW CLOUD (in 8 points of compass)
+          Code  Direction                Code  Direction
+           0    stationary or no cloud    1    NE
+           2    EAST                      3    SE
+           4    SOUTH                     5    SW
+           6    WEST                      7    NW
+           8    NORTH                     9    No definite direction or Unknown
+  Dm    = DIRECTION OF MEDIUM CLOUD (in 8 points of compass)
+  Dh    = DIRECTION OF HIGH CLOUD (in 8 points of compass)
+  TC    = TOTAL AMOUNT OF CLOUDS (in oktas)
+  h     = HEIGHT OF LOWEST CLOUD (in code)
+          Code   Height         Code   Height          Code  Height
+           0 -    0 to   50 m    1 -   50 to  100 m     2 -  100 to  200 m
+           3 -  200 to  300 m    4 -  300 to  600 m     5 -  600 to 1000 m
+           6 - 1000 to 1500 m    7 - 1500 to 2000 m     8 - 2000 to 2500 m
+           9 - 2500 m or more, or no clouds
+           / - height of base of cloud not known or base of clouds at a 
+               level  lower and tops at a level higher than that of the station
+  c     = FORM OF INDIVIDUAL LAYER OF CLOUD (in code)
+  a     = AMOUNT OF INDIVIDUAL LAYER OF CLOUD (in oktas)
+  Ht    = HEIGHT OF BASE INDIVIDUAL CLOUD LAYER (in code)
+            1  Code 00 means cloud height is < 30 meters.
+            2  Code 01 to 50 then cloud height (in meters) = code x 30
+               e.g. if code is 43 then cloud height = 43 x 30 i.e. 1290 "meters
+            3  Codes 51 to 55 are not used
+            4  Code" 56 to 80 then cloud height (in meters) = (code-50) x 300
+               e.g. if code is 77 then cloud height = (77-50) x 300
+               i.e. 8100 meters
+            5  Code 81 to 88 then cloud ht. (in" meters) = 9000+(code-80) x 1500
+               e.g. if code is 87 the"n cloud height = 9000+(87-80) x 1500
+               i.e. 19500 meters
+            6  Code 89 means cloud height is > 21000 meters.
+            7 For code 90 to 99 :
+               90 - <50 m
+               91 -   50 to  100 m   92 -  100 to  200 m
+               93 -  200 to  300 m   94 -  300 to  600 m   95 -  600 to 1000 m
+               96 - 1000 to 1500 m   97 - 1500 to 2000 m   98 - 2000 to 2500 m
+               99 - 2500 m or more or no clouds
+  R/F   = RAINFALL (in mm) SINCE PREVIOUS OBSERVATION
+  EVP   = TOTAL EVAPORATION (in mm) IN CASE OF OBSERVATION AT 03 AND 12 HRS UTC ONLY
+  DW    = DIRECTION OF WIND WAVE (in 16 points of compass)
+  P     = PERIOD OF WAVE (in code)
+          0 - 20 or 21 sec    1 - over 21 sec   2 - 0.8 to 1.2 sec
+          3 - 1.3 to 1.7 sec  4 - 8 or 9 sec    5 - 10 or 11 sec
+          6 - 12 or 13 sec    7 - 14 or 15 sec  8 - 16 or 17 sec
+          9 - 18 or 19 sec    X - calm or period not determined
+  H= HEIGHT OF WIND WAVE (in code)
+          0 - 0.0 to 0.2 m  1 - 0.3 to 0.7 m  2 - 0.8 to 1.2 m
+          3 - 1.3 to 1.7 m  4 - 1.8 to 2.2 m  5 - 2.3 to 2.7 m
+          6 - 2.8 to 3.2 m  7 - 3.3 to 3.7 m  8 - 3.8 to 4.2 m
+          9 - 4.3 to 4.7 m  X - WAVE NOT OBSERVED
+          FOR HEIGHTS ABOVE 4.7 m 50 IS ADDED TO WAVE DIRECTION
+  WAT   = WATER TEMPERATURE (in deg. C)
+
+  NOTE : 16 POINT OF COMPASS
+         Code   Direction Code  Direction Code  Direction Code  Direction
+          00    Calm       02   NNE        05   NE         07   ENE
+          09    E          11   ESE        14   SE         16   SSE
+          18    S          20   SSW        23   SW         25   WSW
+          27    W          29   WNW        32   NW         34   NNW
+          36    N          99   Variable
