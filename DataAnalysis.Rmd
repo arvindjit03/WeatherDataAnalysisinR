@@ -1,0 +1,462 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+# Install and load packages
+library("tidyr")
+library("moments")
+library("writexl")
+#library("ggplot2")
+```
+
+```{r}
+library("readxl")
+exceldata <- read_excel("Weather_Data.xlsx")
+dfdata = data.frame(exceldata)
+#add new column 
+num_row <- nrow(dfdata)
+num_seq <- seq(1, num_row, 1)
+dfdata["seq_num"] <- num_seq
+
+print(dfdata)
+```
+
+```{r}
+# This block is to replace outliers with blank values
+# Using IQR method
+###################### Max Temperature
+Q <- quantile(dfdata$Max.Temperature, probs=c(.25, .75), na.rm = TRUE)
+iqr <- IQR(dfdata$Max.Temperature, na.rm = TRUE)
+up <-  Q[2]+1.5*iqr 
+low<- Q[1]-1.5*iqr
+print(up)
+print(low)
+
+# replace outliers with NA
+dfdata$Max.Temperature[dfdata$Max.Temperature > up] <- NA
+dfdata$Max.Temperature[dfdata$Max.Temperature < low] <- NA
+print(dfdata$Max.Temperature)
+```
+```{r}
+# replace missing values and NA with mean
+sprintf("Number of missing values in Max. Temperature = %s", sum(is.na(dfdata$Max.Temperature)))
+meanMaxTEmp = mean(dfdata$Max.Temperature, na.rm = TRUE)
+print(meanMaxTEmp)
+dfdata$Max.Temperature[is.na(dfdata$Max.Temperature)] <- meanMaxTEmp
+print(dfdata$Max.Temperature)
+```
+
+```{r}
+# This block is to replace outliers with blank values
+# Using IQR method
+###################### Min Temperature
+Q <- quantile(dfdata$Min.Temperature, probs=c(.25, .75), na.rm = TRUE)
+iqr <- IQR(dfdata$Min.Temperature, na.rm = TRUE)
+up <-  Q[2]+1.5*iqr 
+low<- Q[1]-1.5*iqr
+print(up)
+print(low)
+```
+
+```{r}
+# replace outliers with NA
+dfdata$Min.Temperature[dfdata$Min.Temperature > up] <- NA
+dfdata$Min.Temperature[dfdata$Min.Temperature < low] <- NA
+print(dfdata$Min.Temperature)
+```
+
+```{r}
+# replace missing values and NA with mean
+sprintf("Number of missing values in Min. Temperature = %s", sum(is.na(dfdata$Min.Temperature)))
+meanMinTemp = mean(dfdata$Min.Temperature, na.rm = TRUE)
+print(meanMinTemp)
+dfdata$Min.Temperature[is.na(dfdata$Min.Temperature)] <- meanMinTemp
+print(dfdata$Min.Temperature)
+```
+```{r}
+# This block is to replace outliers with blank values
+# Using IQR method
+###################### Temp Dry Bulb
+Q <- quantile(dfdata$Temp.Dry.Bulb, probs=c(.25, .75), na.rm = TRUE)
+iqr <- IQR(dfdata$Temp.Dry.Bulb, na.rm = TRUE)
+up <-  Q[2]+1.5*iqr 
+low<- Q[1]-1.5*iqr
+print(up)
+print(low)
+```
+
+```{r}
+dfdata$Temp.Dry.Bulb[dfdata$Temp.Dry.Bulb > up] <- NA
+dfdata$Temp.Dry.Bulb[dfdata$Temp.Dry.Bulb < low] <- NA
+#print(dfdata$Temp.Dry.Bulb)
+
+```
+
+```{r}
+# replace missing values and NA with mean
+sprintf("Number of missing values in  Temp Dry Bulb = %s", sum(is.na(dfdata$Temp.Dry.Bulb)))
+meanTempDryBulb = mean(dfdata$Temp.Dry.Bulb, na.rm = TRUE)
+print(meanTempDryBulb)
+dfdata$Temp.Dry.Bulb[is.na(dfdata$Temp.Dry.Bulb)] <- meanTempDryBulb
+print(dfdata$Temp.Dry.Bulb)
+```
+
+```{r}
+# This block is to replace outliers with blank values
+# Using IQR method
+###################### Temp Wet Bulb
+Q <- quantile(dfdata$Temp.Wet.Bulb, probs=c(.25, .75), na.rm = TRUE)
+iqr <- IQR(dfdata$Temp.Wet.Bulb, na.rm = TRUE)
+up <-  Q[2]+1.5*iqr 
+low<- Q[1]-1.5*iqr
+print(up)
+print(low)
+```
+
+```{r}
+dfdata$Temp.Wet.Bulb[dfdata$Temp.Wet.Bulb > up] <- NA
+dfdata$Temp.Wet.Bulb[dfdata$Temp.Wet.Bulb < low] <- NA
+```
+
+```{r}
+# replace missing values and NA with mean
+sprintf("Number of missing values in  Temp Wet Bulb = %s", sum(is.na(dfdata$Temp.Wet.Bulb)))
+meanTempWetBulb = mean(dfdata$Temp.Wet.Bulb, na.rm = TRUE)
+print(meanTempWetBulb)
+dfdata$Temp.Wet.Bulb[is.na(dfdata$Temp.Wet.Bulb)] <- meanTempWetBulb
+print(dfdata$Temp.Wet.Bulb)
+```
+
+```{r}
+# This block is to replace outliers with blank values
+# Using IQR method
+###################### Relative Humidity
+Q <- quantile(dfdata$Relative.Humidity, probs=c(.25, .75), na.rm = TRUE)
+iqr <- IQR(dfdata$Relative.Humidity, na.rm = TRUE)
+up <-  Q[2]+1.5*iqr 
+low<- Q[1]-1.5*iqr
+print(up)
+print(low)
+
+```
+
+```{r}
+dfdata$Relative.Humidity[dfdata$Relative.Humidity > up] <- NA
+dfdata$Relative.Humidity[dfdata$Relative.Humidity < low] <- NA
+```
+
+```{r}
+# replace missing values and NA with mean
+sprintf("Number of missing values in Relative Humidity = %s", sum(is.na(dfdata$Relative.Humidity)))
+meanRelativeHumidity = mean(dfdata$Relative.Humidity, na.rm = TRUE)
+print(meanRelativeHumidity)
+dfdata$Relative.Humidity[is.na(dfdata$Relative.Humidity)] <- meanRelativeHumidity
+print(dfdata$Relative.Humidity)
+```
+
+```{r}
+# This block is to replace outliers with blank values
+# Using IQR method
+###################### Inst  Wind Speed
+Q <- quantile(dfdata$Inst.Wind.Speed, probs=c(.25, .75), na.rm = TRUE)
+iqr <- IQR(dfdata$Inst.Wind.Speed, na.rm = TRUE)
+up <-  Q[2]+1.5*iqr 
+low<- Q[1]-1.5*iqr
+print(up)
+print(low)
+print(dfdata$Inst.Wind.Speed)
+```
+
+```{r}
+dfdata$Relative.Humidity[dfdata$Relative.Humidity > up] <- NA
+dfdata$Relative.Humidity[dfdata$Relative.Humidity < low] <- NA
+```
+
+
+```{r}
+# replace missing values and NA with mean
+sprintf("Number of missing values in Inst Wind Speed = %s", sum(is.na(dfdata$Inst.Wind.Speed)))
+meanInstWindSpeed = mean(dfdata$Inst.Wind.Speed, na.rm = TRUE)
+print(meanInstWindSpeed)
+dfdata$Inst.Wind.Speed[is.na(dfdata$Inst.Wind.Speed)] <- meanInstWindSpeed
+print(dfdata$Inst.Wind.Speed)
+```
+
+```{r}
+# This block is to replace outliers with blank values
+# Using IQR method
+###################### Avg  Wind Speed
+Q <- quantile(dfdata$Av.Wind.Speed, probs=c(.25, .75), na.rm = TRUE)
+iqr <- IQR(dfdata$Av.Wind.Speed, na.rm = TRUE)
+up <-  Q[2]+1.5*iqr 
+low<- Q[1]-1.5*iqr
+print(up)
+print(low)
+print(dfdata$Av.Wind.Speed)
+```
+
+```{r}
+dfdata$Av.Wind.Speed[dfdata$Av.Wind.Speed > up] <- NA
+dfdata$Av.Wind.Speed[dfdata$Av.Wind.Speed < low] <- NA
+```
+
+```{r}
+# replace missing values and NA with mean
+sprintf("Number of missing values in Av Wind Speed = %s", sum(is.na(dfdata$Av.Wind.Speed)))
+meanAvWindSpeed = mean(dfdata$Av.Wind.Speed, na.rm = TRUE)
+print(meanAvWindSpeed)
+dfdata$Av.Wind.Speed[is.na(dfdata$Av.Wind.Speed)] <- meanAvWindSpeed
+print(dfdata$Av.Wind.Speed)
+```
+
+```{r}
+# This block is to replace outliers with blank values
+# Using IQR method
+###################### Pan Evaporation
+Q <- quantile(dfdata$Pan.Evaporation, probs=c(.25, .75), na.rm = TRUE)
+iqr <- IQR(dfdata$Pan.Evaporation, na.rm = TRUE)
+up <-  Q[2]+1.5*iqr 
+low<- Q[1]-1.5*iqr
+print(up)
+print(low)
+print(dfdata$Pan.Evaporation)
+```
+
+```{r}
+dfdata$Pan.Evaporation[dfdata$Pan.Evaporation > up] <- NA
+dfdata$Pan.Evaporation[dfdata$Pan.Evaporation < low] <- NA
+```
+```{r}
+# replace missing values and NA with mean
+sprintf("Number of missing values in Pan Evaporation = %s", sum(is.na(dfdata$Pan.Evaporation)))
+meanPanEvap = mean(dfdata$Pan.Evaporation, na.rm = TRUE)
+print(meanPanEvap)
+dfdata$Pan.Evaporation[is.na(dfdata$Pan.Evaporation)] <- meanPanEvap
+print(dfdata$Pan.Evaporation)
+```
+
+```{r}
+# This block is to replace outliers with blank values
+# Using IQR method
+###################### Temp Pan Water
+Q <- quantile(dfdata$Temp...Pan.Water, probs=c(.25, .75), na.rm = TRUE)
+iqr <- IQR(dfdata$Temp...Pan.Water, na.rm = TRUE)
+up <-  Q[2]+1.5*iqr 
+low<- Q[1]-1.5*iqr
+print(up)
+print(low)
+print(dfdata$Temp...Pan.Water)
+```
+
+```{r}
+dfdata$Temp...Pan.Water[dfdata$Temp...Pan.Water > up] <- NA
+dfdata$Temp...Pan.Water[dfdata$Temp...Pan.Water < low] <- NA
+```
+
+```{r}
+# replace missing values and NA with mean
+sprintf("Number of missing values in Temp Pan water = %s", sum(is.na(dfdata$Temp...Pan.Water)))
+meanTempPan = mean(dfdata$Temp...Pan.Water, na.rm = TRUE)
+print(meanTempPan)
+dfdata$Temp...Pan.Water[is.na(dfdata$Temp...Pan.Water)] <- meanTempPan
+print(dfdata$Temp...Pan.Water)
+```
+```{r}
+print(dfdata)
+write_xlsx(dfdata,"ModifiedData.xlsx")
+```
+
+```{r}
+# Read max temperature data and find its statistical parameters 
+df_max_data = dfdata[,c("Max.Temperature"), drop=FALSE]
+#plot line graph 
+#data_plot = data.frame(num_seq, df_max_data, check.rows=TRUE)
+#ggplot(data = data_plot, mapping= aes(x= num_seq, y= df_max_data)) + geom_line()
+print(df_max_data)
+# find number of missing values
+sprintf("Number of missing values in Max. Temperature = %s", sum(is.na(df_max_data)))
+# maximum and minimum values
+sprintf("Maximum temperature value = %s , and Minimum temperature value = %s", max(df_max_data, na.rm = TRUE), min(df_max_data , na.rm= TRUE ))
+df_max_data <- drop_na(df_max_data)
+df_max_data <- as.numeric(unlist(df_max_data))
+# remove temperature above 50 degrees
+sprintf("Number of values greater than 50 = %s" , sum(df_max_data > 50))
+#df_max_data <- subset(df_max_data, df_max_data <= 50)
+# plot histogram for max temperature
+#hist(df_max_data , col="lightblue", breaks = 500)
+#find skewness and Kurtosis
+sprintf("Skewness of Maximum temperature = %s", skewness(df_max_data))
+sprintf("Kurtosis of Maximum temperature = %s", kurtosis(df_max_data))
+
+
+```
+
+```{r}
+#Read min temperature and find its statistical parameters
+df_min_data = dfdata[,c("Min.Temperature"), drop=FALSE]
+print(df_min_data)
+# find number of missing values
+sprintf("Number of missing values in Min. Temperature = %s", sum(is.na(df_min_data)))
+# maximum and minimum values
+sprintf("Maximum temperature value = %s , and Minimum temperature value = %s", max(df_min_data, na.rm = TRUE), min(df_min_data , na.rm= TRUE ))
+df_min_data <- drop_na(df_min_data)
+df_min_data <- as.numeric(unlist(df_min_data))
+# remove temperature above 50 degrees
+sprintf("Number of values greater than 50 = %s" , sum(df_min_data > 50))
+df_min_data <- subset(df_min_data, df_min_data <= 50)
+# plot histogram for min temperature
+hist(df_min_data , col="lightblue", breaks = 500)
+#find skewness and Kurtosis
+sprintf("Skewness of Minimum temperature = %s", skewness(df_min_data))
+sprintf("Kurtosis of Minimum temperature = %s", kurtosis(df_min_data))
+```
+```{r}
+#Read Temp.Dry.Bulb and find its statistical parameters
+df_Dry_Bulb_data = dfdata[,c("Temp.Dry.Bulb"), drop=FALSE]
+print(df_Dry_Bulb_data)
+# find number of missing values
+sprintf("Number of missing values in Min. Temperature = %s", sum(is.na(df_Dry_Bulb_data)))
+# maximum and minimum values
+sprintf("Maximum temperature value = %s , and Minimum temperature value = %s", max(df_Dry_Bulb_data, na.rm = TRUE), min(df_Dry_Bulb_data , na.rm= TRUE ))
+df_Dry_Bulb_data <- drop_na(df_Dry_Bulb_data)
+df_Dry_Bulb_data <- as.numeric(unlist(df_Dry_Bulb_data))
+# remove temperature above 50 degrees
+sprintf("Number of values greater than 50 = %s" , sum(df_Dry_Bulb_data > 50))
+df_Dry_Bulb_data <- subset(df_Dry_Bulb_data, df_Dry_Bulb_data <= 50)
+# plot histogram for max temperature
+hist(df_Dry_Bulb_data , col="lightblue", breaks = 500)
+#find skewness and Kurtosis
+sprintf("Skewness of Maximum temperature = %s", skewness(df_Dry_Bulb_data))
+sprintf("Kurtosis of Maximum temperature = %s", kurtosis(df_Dry_Bulb_data))
+```
+```{r}
+#Read Temp.Wet.Bulb and find its statistical parameters
+df_Wet_Bulb_data = dfdata[,c("Temp.Wet.Bulb"), drop=FALSE]
+print(df_Wet_Bulb_data)
+# find number of missing values
+sprintf("Number of missing values in Min. Temperature = %s", sum(is.na(df_Wet_Bulb_data)))
+# maximum and minimum values
+sprintf("Maximum temperature value = %s , and Minimum temperature value = %s", max(df_Wet_Bulb_data, na.rm = TRUE), min(df_Wet_Bulb_data , na.rm= TRUE ))
+df_Wet_Bulb_data <- drop_na(df_Wet_Bulb_data)
+df_Wet_Bulb_data <- as.numeric(unlist(df_Wet_Bulb_data))
+# remove temperature above 50 degrees
+sprintf("Number of values greater than 50 = %s" , sum(df_Wet_Bulb_data > 50))
+df_Wet_Bulb_data <- subset(df_Wet_Bulb_data, df_Wet_Bulb_data <= 50)
+# plot histogram for max temperature
+hist(df_Wet_Bulb_data , col="lightblue", breaks = 500)
+#find skewness and Kurtosis
+sprintf("Skewness of Maximum temperature = %s", skewness(df_Wet_Bulb_data))
+sprintf("Kurtosis of Maximum temperature = %s", kurtosis(df_Wet_Bulb_data))
+```
+
+```{r}
+#Read Relative.Humidity and find its statistical parameters
+df_Relative_Humidity_data = dfdata[,c("Relative.Humidity"), drop=FALSE]
+print(df_Relative_Humidity_data)
+# find number of missing values in Relative Humidity
+sprintf("Number of missing values in Relative Humidity = %s", sum(is.na(df_Relative_Humidity_data)))
+# maximum and minimum values of Relative Humidity
+sprintf("Maximum relative humidity value = %s , and Minimum relative humidity value = %s", max(df_Relative_Humidity_data, na.rm = TRUE), min(df_Relative_Humidity_data , na.rm= TRUE ))
+df_Relative_Humidity_data <- drop_na(df_Relative_Humidity_data)
+df_Relative_Humidity_data <- as.numeric(unlist(df_Relative_Humidity_data))
+# remove temperature above 50 degrees
+#sprintf("Number of values greater than 50 = %s" , sum(df_Relative_Humidity_data > 50))
+#df_Relative_Humidity_data <- subset(df_Relative_Humidity_data, df_Relative_Humidity_data <= 50)
+# plot histogram for relative Humidity
+hist(df_Relative_Humidity_data , col="lightblue", breaks = 500)
+#find skewness and Kurtosis
+sprintf("Skewness of Relative Humidity = %s", skewness(df_Relative_Humidity_data))
+sprintf("Kurtosis of Relative Humidity = %s", kurtosis(df_Relative_Humidity_data))
+```
+
+```{r}
+#Read Inst Wind Speed and find its statistical parameters
+df_Inst_Wind_Speed_data = dfdata[,c("Inst.Wind.Speed"), drop=FALSE]
+print(df_Inst_Wind_Speed_data)
+# find number of missing values in Inst. Wind speed
+sprintf("Number of missing values in Inst. Wind speed = %s", sum(is.na(df_Inst_Wind_Speed_data)))
+# maximum and minimum values of Inst. Wind Speed
+sprintf("Maximum Inst. Wind Speed value = %s , and Minimum Inst. Wind Speed value = %s", max(df_Inst_Wind_Speed_data, na.rm = TRUE), min(df_Inst_Wind_Speed_data , na.rm= TRUE ))
+df_Inst_Wind_Speed_data <- drop_na(df_Inst_Wind_Speed_data)
+df_Inst_Wind_Speed_data <- as.numeric(unlist(df_Inst_Wind_Speed_data))
+# remove temperature above 50 degrees
+#sprintf("Number of values greater than 50 = %s" , sum(df_Relative_Humidity_data > 50))
+#df_Relative_Humidity_data <- subset(df_Relative_Humidity_data, df_Relative_Humidity_data <= 50)
+# plot histogram for relative Humidity
+hist(df_Inst_Wind_Speed_data , col="lightblue", breaks = 500)
+#find skewness and Kurtosis
+sprintf("Skewness of Inst. Wind Speed= %s", skewness(df_Inst_Wind_Speed_data))
+sprintf("Kurtosis of Inst. Wind Speed = %s", kurtosis(df_Inst_Wind_Speed_data))
+```
+
+```{r}
+#Read Average Wind Speed and find its statistical parameters
+df_Avg_Wind_Speed_data = dfdata[,c("Av.Wind.Speed"), drop=FALSE]
+print(df_Avg_Wind_Speed_data)
+# find number of missing values in Avg Wind speed
+sprintf("Number of missing values in Avg Wind speed = %s", sum(is.na(df_Avg_Wind_Speed_data)))
+# maximum and minimum values of Avg Wind Speed
+sprintf("Maximum Avg. Wind Speed value = %s , and Minimum Avg. Wind Speed value = %s", max(df_Avg_Wind_Speed_data, na.rm = TRUE), min(df_Avg_Wind_Speed_data , na.rm= TRUE ))
+df_Avg_Wind_Speed_data <- drop_na(df_Avg_Wind_Speed_data)
+df_Avg_Wind_Speed_data <- as.numeric(unlist(df_Avg_Wind_Speed_data))
+# remove temperature above 50 degrees
+#sprintf("Number of values greater than 50 = %s" , sum(df_Relative_Humidity_data > 50))
+#df_Relative_Humidity_data <- subset(df_Relative_Humidity_data, df_Relative_Humidity_data <= 50)
+# plot histogram for relative Humidity
+hist(df_Avg_Wind_Speed_data , col="lightblue", breaks = 500)
+#find skewness and Kurtosis
+sprintf("Skewness of Avg. Wind Speed= %s", skewness(df_Avg_Wind_Speed_data))
+sprintf("Kurtosis of Avg. Wind Speed = %s", kurtosis(df_Avg_Wind_Speed_data))
+```
+
+```{r}
+#Read Pan Evaporation and find its statistical parameters
+df_Pan_Evaporation_data = dfdata[,c("Pan.Evaporation"), drop=FALSE]
+print(df_Pan_Evaporation_data)
+# find number of missing values in Pan Evaporation
+sprintf("Number of missing values in Pan Evaporation = %s", sum(is.na(df_Pan_Evaporation_data)))
+# maximum and minimum values of Pan Evaporation
+sprintf("Maximum Pan Evaporation value = %s , and Minimum Pan Evaporation value = %s", max(df_Pan_Evaporation_data, na.rm = TRUE), min(df_Pan_Evaporation_data , na.rm= TRUE ))
+df_Pan_Evaporation_data <- drop_na(df_Pan_Evaporation_data)
+df_Pan_Evaporation_data <- as.numeric(unlist(df_Pan_Evaporation_data))
+# remove temperature above 50 degrees
+#sprintf("Number of values greater than 50 = %s" , sum(df_Relative_Humidity_data > 50))
+#df_Relative_Humidity_data <- subset(df_Relative_Humidity_data, df_Relative_Humidity_data <= 50)
+# plot histogram for pan evaporation
+hist(df_Pan_Evaporation_data , col="lightblue", breaks = 500)
+#find skewness and Kurtosis
+sprintf("Skewness of pan evaporation= %s", skewness(df_Pan_Evaporation_data))
+sprintf("Kurtosis of pan evaporation= %s", kurtosis(df_Pan_Evaporation_data))
+```
+```{r}
+#Read Pan Evaporation and find its statistical parameters
+df_Temp_Pan_Water_data = dfdata[,c("Temp...Pan.Water"), drop=FALSE]
+print(df_Temp_Pan_Water_data)
+# find number of missing values in Temp Pan Water
+sprintf("Number of missing values in Temp Pan Water = %s", sum(is.na(df_Temp_Pan_Water_data)))
+# maximum and minimum values of Temp Pan Water
+sprintf("Maximum Temp Pan Water value = %s , and Minimum Temp Pan Water value = %s", max(df_Temp_Pan_Water_data, na.rm = TRUE), min(df_Temp_Pan_Water_data , na.rm= TRUE ))
+df_Temp_Pan_Water_data <- drop_na(df_Temp_Pan_Water_data)
+df_Temp_Pan_Water_data <- as.numeric(unlist(df_Temp_Pan_Water_data))
+# remove temperature above 50 degrees
+#sprintf("Number of values greater than 50 = %s" , sum(df_Relative_Humidity_data > 50))
+#df_Relative_Humidity_data <- subset(df_Relative_Humidity_data, df_Relative_Humidity_data <= 50)
+# plot histogram for pan evaporation
+hist(df_Temp_Pan_Water_data , col="lightblue", breaks = 500)
+#find skewness and Kurtosis
+sprintf("Skewness of Temp Pan Water = %s", skewness(df_Temp_Pan_Water_data))
+sprintf("Kurtosis of Temp Pan Water = %s", kurtosis(df_Temp_Pan_Water_data))
+```
+```{r}
+# Correlation between variables
+df_numeric_cols_data <- dfdata[,c("Max.Temperature", "Min.Temperature", "Temp.Dry.Bulb", "Temp.Wet.Bulb", "Relative.Humidity" ,"Inst.Wind.Speed","Av.Wind.Speed","Pan.Evaporation","Temp...Pan.Water"), drop=FALSE]
+cor(df_numeric_cols_data, method = "pearson", use = "complete.obs")
+```
+
+```{r}
+#install.packages("ggplot2")
+#install.packages("callr")
+install.packages("processx")
+```
+
