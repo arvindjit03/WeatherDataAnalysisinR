@@ -1,0 +1,95 @@
+---
+title: "KnnWindDirection"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library("readxl")
+library("DataExplorer")
+library("tidyverse")
+library("dplyr")
+library(class)
+library("writexl")
+```
+
+```{r}
+dfdata <- read_excel("ModifiedData.xlsx")
+plot_missing(dfdata)
+```
+```{r}
+#separate missing and non missing wind speed values in 2 groups
+
+dfdataWindDirectionNull <- dfdata[is.na(dfdata$Wind.direction),]
+plot_missing(dfdataWindDirectionNull)
+dfdataWindDirectionNotNull <- na.omit(dfdata)
+dfdataWindDirectionNullFiltered <- drop_columns(dfdataWindDirectionNull, c("Station.Code", "Year", "Day", "Hour","seq_num","Month"))
+dfdataWindDirectionNotNullFiltered <- drop_columns(dfdataWindDirectionNotNull, c("Station.Code", "Year", "Day", "Hour","seq_num","Month"))
+#print(dfdataWindDirectionNotNull)
+#plot_missing(dfdataWindDirectionNotNull)
+# fetch rows with null wind direction
+
+```
+```{r}
+# apply knn to this data 
+# normalise numerical features
+nor <-function(x) { (x -min(x))/(max(x)-min(x))   }
+```
+```{r}
+# target class
+class_train_label <- dfdataWindDirectionNotNullFiltered[,"Wind.direction",drop = TRUE]
+print(class_train_label )
+```
+
+```{r}
+ dfdataWindDirectionNotNullFiltered <- as.data.frame(lapply(dfdataWindDirectionNotNullFiltered[,c("Min.Temperature","Max.Temperature","Temp.Dry.Bulb","Temp.Wet.Bulb","Relative.Humidity","Inst.Wind.Speed","Av.Wind.Speed","Pan.Evaporation","Temp...Pan.Water")], nor))
+#print(dfdata_normalised)
+dfdataWindDirectionNullFiltered <- as.data.frame(lapply(dfdataWindDirectionNullFiltered[,c("Min.Temperature","Max.Temperature","Temp.Dry.Bulb","Temp.Wet.Bulb","Relative.Humidity","Inst.Wind.Speed","Av.Wind.Speed","Pan.Evaporation","Temp...Pan.Water")], nor))
+```
+```{r}
+#print(dim(dfdata_normalisednonnull))
+#print(dim(class_train_label))
+pr <- knn(dfdataWindDirectionNotNullFiltered,dfdataWindDirectionNullFiltered,cl=class_train_label,k=5)
+
+print(pr)
+
+
+```
+```{r}
+pr <- data.frame(pr)
+print(dim(pr))
+print(dim(dfdata))
+print(dim(dfdataWindDirectionNotNullFiltered))
+final_result <-drop_columns(dfdataWindDirectionNull, c("Wind.direction"))
+final_result <- cbind(final_result, "Wind.direction" = pr[, 1])
+#final_result <- rbind(dfdataWindDirectionNull,pr)
+#print(class(pr))
+#pr <- data.frame(pr)
+#print(class(pr))
+#final_result <- merge(dfdataWindDirectionNull, pr)
+print(final_result)
+print(dim(final_result))
+```
+
+```{r}
+total <- rbind(final_result, dfdataWindDirectionNotNull)
+print(total)
+```
+```{r}
+total <- total[order(total$seq_num),]
+#plot_missing(total)
+print(dim(total))
+print(total)
+#print(dim(dfdata))
+```
+```{r}
+# final data
+write_xlsx(total,"FinalModifiedData.xlsx")
+```
+
+
+
