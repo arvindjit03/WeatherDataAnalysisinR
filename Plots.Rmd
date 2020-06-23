@@ -1,0 +1,42 @@
+---
+title: "LinearRegression"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library("ggplot2")
+library("readxl")
+library("DataExplorer")
+exceldata <- read_excel("ModifiedData.xlsx")
+dfdata = data.frame(exceldata)
+print(dfdata$Relative.Humidity)
+```
+```{r}
+# we need to deal with categorical variable wind direction 
+# find count and count % of all the values
+wind_dir = dfdata$Wind.direction
+#introduce(dfdata)
+plot_intro(dfdata)
+```
+```{r}
+plot_missing(dfdata)
+```
+
+```{r}
+meanRelativeHumidity = mean(dfdata$Relative.Humidity, na.rm = TRUE)
+print(meanRelativeHumidity)
+dfdata$Relative.Humidity[is.na(dfdata$Relative.Humidity)] <- meanRelativeHumidity
+print(dfdata$Relative.Humidity)
+```
+
+
