@@ -1,0 +1,184 @@
+---
+title: "LinearRegression"
+output: html_document
+---
+```{r}
+library("ggplot2")
+library("readxl")
+library("DataExplorer")
+library("e1071")
+library("Hmisc")
+```
+```{r}
+
+exceldata <- read_excel("FinalModifiedData.xlsx")
+dfdata1 <- data.frame(exceldata)
+print(dfdata1)
+```
+```{r}
+exceldata2 <- read_excel("Weather_Data.xlsx")
+dfdata <- data.frame(exceldata2)
+print(dfdata)
+```
+
+
+```{r}
+# Graphical Analysis
+# 1. Scatter plots to analyze linear relationship
+# 2. Box plots to visualize outliers
+# 3. density plots to find data distribution
+scatter.smooth(x=dfdata$Min.Temperature, y= dfdata$Max.Temperature, main="Max temp ~ Min temp") 
+```
+
+```{r}
+scatter.smooth(x=dfdata$Temp.Dry.Bulb, y= dfdata$Max.Temperature, main="Max temp ~ Temp Dry bulb") 
+```
+```{r}
+scatter.smooth(x=dfdata$Temp.Wet.Bulb, y= dfdata$Max.Temperature, main="Max temp ~Temp Wet bulb") 
+```
+
+```{r}
+scatter.smooth(x=dfdata$Relative.Humidity, y= dfdata$Max.Temperature, main="Max temp ~ Relative Humidity") 
+```
+```{r}
+scatter.smooth(x=dfdata$Inst.Wind.Speed, y= dfdata$Max.Temperature, main="Max temp ~ Inst. wind speed") 
+```
+
+```{r}
+scatter.smooth(x=dfdata$Av.Wind.Speed, y= dfdata$Max.Temperature, main="Max temp ~ Av. wind speed") 
+```
+```{r}
+scatter.smooth(x=dfdata$Pan.Evaporation, y= dfdata$Max.Temperature, main="Max temp ~ Pan evaporation") 
+```
+```{r}
+scatter.smooth(x=dfdata$Temp...Pan.Water, y= dfdata$Max.Temperature, main="Max temp ~ Temp pan water") 
+```
+```{r}
+boxplot(dfdata$Min.Temperature, main="Min Temperature", sub=paste("Outlier rows: ", boxplot.stats(dfdata$Min.Temperature)$out))
+```
+```{r}
+boxplot(dfdata$Max.Temperature, main="Max Temperature", sub=paste("Outlier rows: ", boxplot.stats(dfdata$Max.Temperature)$out))
+```
+```{r}
+boxplot(dfdata$Temp.Dry.Bulb, main=" Temperature dry bulb", sub=paste( boxplot.stats(dfdata$Min.Temperature)$out))
+```
+```{r}
+boxplot(dfdata$Temp.Wet.Bulb, main="Temperature Wet bulb", sub=paste( boxplot.stats(dfdata$Min.Temperature)$out))
+```
+```{r}
+boxplot(dfdata$Relative.Humidity, main="Relative Humidity", sub=paste( boxplot.stats(dfdata$Min.Temperature)$out))
+```
+```{r}
+boxplot(dfdata$Inst.Wind.Speed, main="Inst. Wind Speed", sub=paste( boxplot.stats(dfdata$Inst.Wind.Speed)$out))
+```
+```{r}
+boxplot(dfdata$Av.Wind.Speed, main="Average wind speed", sub=paste( boxplot.stats(dfdata$Av.Wind.Speed)$out))
+```
+```{r}
+boxplot(dfdata$Pan.Evaporation, main="Pan evaporation", sub=paste( boxplot.stats(dfdata$Pan.Evaporation)$out))
+```
+```{r}
+boxplot(dfdata$Temp...Pan.Water, main="Temp pan water", sub=paste( boxplot.stats(dfdata$Temp...Pan.Water)$out))
+```
+```{r}
+plot(density(dfdata1$Min.Temperature), main="Density Plot: Min Temperature",  sub=paste("Skewness:", round(e1071::skewness(dfdata1$Min.Temperature), 2)))  # density plot for 'speed'
+polygon(density(dfdata1$Min.Temperature), col="blue")
+```
+```{r}
+plot(density(dfdata1$Max.Temperature), main="Density Plot: Max Temperature",  sub=paste("Skewness:", round(e1071::skewness(dfdata1$Max.Temperature), 2)))  # density plot for 'speed'
+polygon(density(dfdata1$Max.Temperature), col="blue")
+```
+```{r}
+plot(density(dfdata1$Temp.Dry.Bulb), main="Density Plot: Temp Dry bulb",  sub=paste("Skewness:", round(e1071::skewness(dfdata1$Temp.Dry.Bulb), 2)))  # density plot for 'speed'
+polygon(density(dfdata1$Temp.Dry.Bulb), col="blue")
+```
+```{r}
+plot(density(dfdata1$Temp.Wet.Bulb), main="Density Plot: Temp Wet Bulb",  sub=paste("Skewness:", round(e1071::skewness(dfdata1$Temp.Wet.Bulb), 2)))  
+polygon(density(dfdata1$Temp.Wet.Bulb), col="blue")
+```
+```{r}
+plot(density(dfdata1$Relative.Humidity), main="Density Plot: Relative Humidity",  sub=paste("Skewness:", round(e1071::skewness(dfdata1$Relative.Humidity), 2)))  
+polygon(density(dfdata1$Relative.Humidity), col="blue")
+```
+```{r}
+plot(density(dfdata1$Inst.Wind.Speed), main="Density Plot: Inst wind speed",  sub=paste("Skewness:", round(e1071::skewness(dfdata1$Inst.Wind.Speed), 2)))  
+polygon(density(dfdata1$Inst.Wind.Speed), col="blue")
+```
+```{r}
+plot(density(dfdata1$Av.Wind.Speed), main="Density Plot: Average Wind Speed",  sub=paste("Skewness:", round(e1071::skewness(dfdata1$Av.Wind.Speed), 2)))  
+polygon(density(dfdata1$Av.Wind.Speed), col="blue")
+```
+```{r}
+plot(density(dfdata1$Pan.Evaporation), main="Density Plot: Pan Evaporation",  sub=paste("Skewness:", round(e1071::skewness(dfdata1$Pan.Evaporation), 2)))  
+polygon(density(dfdata1$Pan.Evaporation), col="blue")
+```
+```{r}
+plot(density(dfdata1$Temp...Pan.Water), main="Density Plot: Temp Pan Water",  sub=paste("Skewness:", round(e1071::skewness(dfdata1$Temp...Pan.Water), 2)))  
+polygon(density(dfdata1$Temp...Pan.Water), col="blue")
+```
+```{r}
+flattenCorrMatrix <- function(cormat, pmat) {
+  ut <- upper.tri(cormat)
+  data.frame(
+    row = rownames(cormat)[row(cormat)[ut]],
+    column = rownames(cormat)[col(cormat)[ut]],
+    cor  =(cormat)[ut],
+    p = pmat[ut]
+    )
+}
+```
+
+```{r}
+# correlation and p values
+numcols <- c("Min.Temperature", "Max.Temperature", "Temp.Dry.Bulb","Temp.Wet.Bulb","Relative.Humidity","Inst.Wind.Speed","Av.Wind.Speed","Pan.Evaporation","Temp...Pan.Water")
+dfdataCorr <- dfdata1[numcols]
+res2<-rcorr(as.matrix(dfdataCorr))
+print(flattenCorrMatrix(res2$r, res2$P))
+
+```
+```{r}
+# change categorical variables to numerical values
+dfdata1[dfdata1=="C"]<-0
+dfdata1[dfdata1=="E"]<-9
+dfdata1[dfdata1=="S"]<-18
+dfdata1[dfdata1=="W"]<-27
+dfdata1[dfdata1=="N"]<-36
+dfdata1[dfdata1=="NNE"]<-2
+dfdata1[dfdata1=="ESE"]<-11
+dfdata1[dfdata1=="SSW"]<- 20
+dfdata1[dfdata1=="WNW"]<- 29
+dfdata1[dfdata1=="V"]<- 99
+dfdata1[dfdata1=="NE"]<- 5
+dfdata1[dfdata1=="SE"]<- 14
+dfdata1[dfdata1=="SW"]<- 23
+dfdata1[dfdata1=="NW"]<- 32
+dfdata1[dfdata1=="ENE"]<- 7
+dfdata1[dfdata1=="SSE"]<- 16
+dfdata1[dfdata1=="WSW"]<- 25
+dfdata1[dfdata1=="NNW"]<- 34
+
+print(dfdata1)
+```
+```{r}
+# Train and Test data
+numcols <- c("Min.Temperature", "Max.Temperature", "Temp.Dry.Bulb","Temp.Wet.Bulb","Relative.Humidity","Inst.Wind.Speed","Av.Wind.Speed","Pan.Evaporation","Temp...Pan.Water","Wind.direction")
+dfModelData <- dfdata1[numcols]
+#print(dfModelData)
+set.seed(1)
+row.number <- sample(1:nrow(dfModelData), 0.7*nrow(dfModelData))
+train = dfModelData[row.number,]
+test = dfModelData[-row.number,]
+dim(train)
+dim(test)
+```
+
+```{r}
+linearRegressionModel <- lm(Max.Temperature ~ Min.Temperature+Temp.Dry.Bulb+Temp.Wet.Bulb+Relative.Humidity+Inst.Wind.Speed+Av.Wind.Speed+Pan.Evaporation+Temp...Pan.Water+Wind.direction, data=train )
+```
+
+```{r}
+summary(linearRegressionModel)
+
+plot(linearRegressionModel)
+```
+
