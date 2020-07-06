@@ -1,0 +1,1393 @@
+---
+title: "Regression Tree"
+output: html_document
+---
+
+################### Global Model ###################
+
+```{r}
+library(readxl)
+library(mlr)
+library(rpart)
+library(rpart.plot)
+library(dplyr)
+library(Hmisc)
+library(ggplot2)
+```
+################### Reading the dataset ###################
+```{r}
+my_data <- read_excel('FinalModifiedData.xlsx')
+my_data <- as.data.frame(my_data)
+
+glimpse(my_data)
+
+my_data$Station.Code<-NULL
+my_data$Hour<-NULL
+my_data$Year<-NULL
+my_data$Month<-NULL
+my_data$Day<-NULL
+
+str(my_data)
+
+```
+################## Univariate Analysis ##################
+```{r}
+
+describe(my_data)
+
+```
+################## Histograms for distribution of data ##################
+```{r}
+
+ggplot(my_data, aes(x=my_data$Min.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data, aes(x=my_data$Max.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data, aes(x=my_data$Temp.Dry.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data, aes(x=my_data$Temp.Wet.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data, aes(x=my_data$Inst.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data, aes(x=my_data$Av.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data, aes(x=my_data$Relative.Humidity)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data, aes(x=my_data$Temp...Pan.Water)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data, aes(x=my_data$Pan.Evaporation)) + geom_histogram()
+
+```
+################## Box plots for outliers ##################
+```{r}
+# Create separate boxplots for each attribute
+par(mfrow=c(1,3))
+for(i in 1:3) {
+	boxplot(my_data[,i], main=names(my_data)[i])
+}
+
+```
+```{r}
+par(mfrow=c(1,3))
+for(i in 4:6) {
+	boxplot(my_data[,i], main=names(my_data)[i])
+}
+```
+```{r}
+par(mfrow=c(1,3))
+for(i in 8:9)
+{
+    
+  boxplot(my_data[,i], main=names(my_data)[i])
+}
+```
+
+```{r}
+# change categorical values to numerical values
+
+my_data[my_data=="C"]<-0
+my_data[my_data=="E"]<-9
+my_data[my_data=="S"]<-18
+my_data[my_data=="W"]<-27
+my_data[my_data=="N"]<-36
+my_data[my_data=="NNE"]<-2
+my_data[my_data=="ESE"]<-11
+my_data[my_data=="SSW"]<- 20
+my_data[my_data=="WNW"]<- 29
+my_data[my_data=="V"]<- 99
+my_data[my_data=="NE"]<- 5
+my_data[my_data=="SE"]<- 14
+my_data[my_data=="SW"]<- 23
+my_data[my_data=="NW"]<- 32
+my_data[my_data=="ENE"]<- 7
+my_data[my_data=="SSE"]<- 16
+my_data[my_data=="WSW"]<- 25
+my_data[my_data=="NNW"]<- 34
+
+my_data$Wind.direction <- as.numeric(as.character(my_data$Wind.direction))
+
+str(my_data)
+
+```
+################### Visualizing the Correlation matrix ###################
+```{r}
+source("http://www.sthda.com/upload/rquery_cormat.r")
+require("corrplot")
+rquery.cormat(my_data)
+```
+
+```{r}
+
+rmse_reg <- function(model_obj, testing = NULL, target = NULL) {
+  #Calculates rmse for a regression decision tree
+  #Arguments:
+    # testing - test data set
+    # target  - target variable (length 1 character vector)
+    yhat <- predict(model_obj, newdata = testing)
+  actual <- testing[[target]]
+  sqrt(mean((yhat-actual)^2))
+}
+
+```
+#############Creating the Task #############
+```{r}
+#Splitting the dataset
+
+sample <- sample.int(n = nrow(my_data), size = floor(.75*nrow(my_data)), replace = F)
+train <- my_data[sample, ]
+test  <- my_data[-sample, ]
+
+#Regression Tree:Task Creation
+regr.task.train<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(train), 
+                        target = "Max.Temperature")
+
+regr.task.test<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(test), 
+                        target = "Max.Temperature")
+
+#Repeated cross validation
+cv.folds <- makeResampleDesc("CV", iters = 3)
+
+# Define model tuning algorithm ~ Random tune algorithm
+random.tune <- makeTuneControlRandom(maxit = 5)
+
+```
+#############Learner for the model#############
+```{r}
+
+set.seed(1)
+
+#Defining learner model
+lrn <- makeLearner("regr.rpart") 
+
+#Get parameter set of the learner
+getParamSet(lrn)                        
+
+# Define parameters of model  
+model.params <- makeParamSet( 
+  makeNumericParam("cp", lower = 0, upper = 0.1),
+  makeIntegerParam("minsplit", lower = 5, upper = 20),
+  makeIntegerParam("minbucket", lower = 2, upper = 10)
+)
+
+#Hyperparameter tuning
+tuned.model <- tuneParams(learner    = lrn,
+                             task       = regr.task.train,
+                             resampling = cv.folds,
+                             par.set    = model.params,
+                             control    = random.tune,
+                             measures = list(rmse,mae),
+                             show.info  = TRUE)
+tuned.model$x
+```
+############# Evaluation of Model #############
+```{r}
+
+lrn <- makeLearner("regr.rpart",par.vals = tuned.model$x)
+
+res <- mlr::train(lrn,regr.task.train)
+rpc = rpart.control(minsplit = tuned.model$x$minsplit, minbucket = tuned.model$x$minbucket, cp = tuned.model$x$cp
+                    )
+mod <- rpart(Max.Temperature ~ ., data = train, control = rpc)
+
+#Calucating the RMSE of training set 
+rmse_reg(mod, testing = train, target = "Max.Temperature")
+getLearnerModel(res)
+
+rpart.plot(res$learner.model,roundint=FALSE)
+
+```
+```{r}
+
+(mlrpred   <- predict(res, newdata = test))
+
+#Calcuating the RMSE of test set
+performance(mlrpred, measures = rmse) 
+
+```
+
+################# LOCAL ####################
+############## Station code: Amli ##############
+
+```{r}
+
+my_data1 <- read_excel('SCAmli.xlsx')
+my_data1 <- as.data.frame(my_data1)
+
+glimpse(my_data1)
+
+my_data1$Station.Code<-NULL
+my_data1$Hour<-NULL
+my_data1$Year<-NULL
+my_data1$Month<-NULL
+my_data1$Day<-NULL
+
+str(my_data1)
+
+```
+################## Histograms distribution of data ##################
+```{r}
+ggplot(my_data1, aes(x=my_data1$Min.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data1, aes(x=my_data1$Max.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data1, aes(x=my_data1$Temp.Dry.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data1, aes(x=my_data1$Temp.Wet.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data1, aes(x=my_data1$Inst.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data1, aes(x=my_data1$Av.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data1, aes(x=my_data1$Relative.Humidity)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data1, aes(x=my_data1$Temp...Pan.Water)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data1, aes(x=my_data1$Pan.Evaporation)) + geom_histogram()
+
+```
+
+```{r}
+# change categorical values to numerical values
+
+my_data1[my_data1=="C"]<-0
+my_data1[my_data1=="E"]<-9
+my_data1[my_data1=="S"]<-18
+my_data1[my_data1=="W"]<-27
+my_data1[my_data1=="N"]<-36
+my_data1[my_data1=="NNE"]<-2
+my_data1[my_data1=="ESE"]<-11
+my_data1[my_data1=="SSW"]<- 20
+my_data1[my_data1=="WNW"]<- 29
+my_data1[my_data1=="V"]<- 99
+my_data1[my_data1=="NE"]<- 5
+my_data1[my_data1=="SE"]<- 14
+my_data1[my_data1=="SW"]<- 23
+my_data1[my_data1=="NW"]<- 32
+my_data1[my_data1=="ENE"]<- 7
+my_data1[my_data1=="SSE"]<- 16
+my_data1[my_data1=="WSW"]<- 25
+my_data1[my_data1=="NNW"]<- 34
+
+my_data1$Wind.direction <- as.numeric(as.character(my_data1$Wind.direction))
+
+str(my_data1)
+```
+################ Visualizing the Correlation matrix ################
+```{r}
+source("http://www.sthda.com/upload/rquery_cormat.r")
+require("corrplot")
+rquery.cormat(my_data1)
+```
+
+```{r}
+#Splitting the dataset
+
+sample1 <- sample.int(n = nrow(my_data1), size = floor(.75*nrow(my_data1)), replace = F)
+train1 <- my_data1[sample1, ]
+test1  <- my_data1[-sample1, ]
+
+#Regression Tree:Task Creation
+regr.task.train1<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(train1), 
+                        target = "Max.Temperature")
+
+regr.task.test1<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(test1), 
+                        target = "Max.Temperature")
+
+#Repeated cross validation
+cv.folds <- makeResampleDesc("CV", iters = 3)
+
+# Define model tuning algorithm ~ Random tune algorithm
+random.tune <- makeTuneControlRandom(maxit = 5)
+```
+
+```{r}
+set.seed(1)
+
+#Defining learner model
+lrn1 <- makeLearner("regr.rpart") 
+
+#Get parameter set of the learner
+getParamSet(lrn1)                        
+
+# Define parameters of model  
+model.params <- makeParamSet( 
+  makeNumericParam("cp", lower = 0, upper = 0.1),
+  makeIntegerParam("minsplit", lower = 5, upper = 20),
+  makeIntegerParam("minbucket", lower = 2, upper = 10)
+)
+
+#Hyperparameter tuning
+tuned.model1 <- tuneParams(learner    = lrn1,
+                             task       = regr.task.train1,
+                             resampling = cv.folds,
+                             par.set    = model.params,
+                             control    = random.tune,
+                             measures = list(rmse,mae),
+                             show.info  = TRUE)
+tuned.model1$x
+```
+
+```{r}
+lrn1 <- makeLearner("regr.rpart",par.vals = tuned.model1$x)
+
+res1 <- mlr::train(lrn1,regr.task.train1)
+rpc1 = rpart.control(minsplit = tuned.model1$x$minsplit, minbucket = tuned.model1$x$minbucket, cp = tuned.model1$x$cp
+                    )
+mod1 <- rpart(Max.Temperature ~ ., data = train1, control = rpc1)
+
+#Calucating the RMSE of training set 
+rmse_reg(mod1, testing = train1, target = "Max.Temperature")
+getLearnerModel(res1)
+
+rpart.plot(res1$learner.model,roundint=FALSE)
+
+```
+
+```{r}
+
+(mlrpred1   <- predict(res1, newdata = test1))
+
+#Calcuating the RMSE of test set
+
+sc1 <- performance(mlrpred1, measures = rmse) 
+
+print(sc1)
+
+```
+
+############### Station code: Chopadvav ###############
+
+```{r}
+
+my_data2 <- read_excel('SCChop.xlsx')
+my_data2 <- as.data.frame(my_data2)
+
+glimpse(my_data2)
+
+my_data2$Station.Code<-NULL
+my_data2$Hour<-NULL
+my_data2$Year<-NULL
+my_data2$Month<-NULL
+my_data2$Day<-NULL
+
+str(my_data2)
+
+```
+
+```{r}
+# change categorical values to numerical values
+
+my_data2[my_data2=="C"]<-0
+my_data2[my_data2=="E"]<-9
+my_data2[my_data2=="S"]<-18
+my_data2[my_data2=="W"]<-27
+my_data2[my_data2=="N"]<-36
+my_data2[my_data2=="NNE"]<-2
+my_data2[my_data2=="ESE"]<-11
+my_data2[my_data2=="SSW"]<- 20
+my_data2[my_data2=="WNW"]<- 29
+my_data2[my_data2=="V"]<- 99
+my_data2[my_data2=="NE"]<- 5
+my_data2[my_data2=="SE"]<- 14
+my_data2[my_data2=="SW"]<- 23
+my_data2[my_data2=="NW"]<- 32
+my_data2[my_data2=="ENE"]<- 7
+my_data2[my_data2=="SSE"]<- 16
+my_data2[my_data2=="WSW"]<- 25
+my_data2[my_data2=="NNW"]<- 34
+
+my_data2$Wind.direction <- as.numeric(as.character(my_data2$Wind.direction))
+
+str(my_data2)
+```
+################## Histograms distribution of data ##################
+```{r}
+ggplot(my_data2, aes(x=my_data2$Min.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data2, aes(x=my_data2$Max.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data2, aes(x=my_data2$Temp.Dry.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data2, aes(x=my_data2$Temp.Wet.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data2, aes(x=my_data2$Inst.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data2, aes(x=my_data2$Av.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data2, aes(x=my_data2$Relative.Humidity)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data2, aes(x=my_data2$Temp...Pan.Water)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data2, aes(x=my_data2$Pan.Evaporation)) + geom_histogram()
+
+```
+################ Visualizing the Correlation matrix ################
+```{r}
+source("http://www.sthda.com/upload/rquery_cormat.r")
+require("corrplot")
+rquery.cormat(my_data2)
+```
+
+```{r}
+#Splitting the dataset
+
+sample2 <- sample.int(n = nrow(my_data2), size = floor(.75*nrow(my_data2)), replace = F)
+train2 <- my_data2[sample2, ]
+test2  <- my_data2[-sample2, ]
+
+#Regression Tree:Task Creation
+regr.task.train2<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(train2), 
+                        target = "Max.Temperature")
+
+regr.task.test2<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(test2), 
+                        target = "Max.Temperature")
+
+#Repeated cross validation
+cv.folds <- makeResampleDesc("CV", iters = 3)
+
+# Define model tuning algorithm ~ Random tune algorithm
+random.tune <- makeTuneControlRandom(maxit = 5)
+```
+
+```{r}
+set.seed(1)
+
+#Defining learner model
+lrn2 <- makeLearner("regr.rpart") 
+
+#Get parameter set of the learner
+getParamSet(lrn2)                        
+
+# Define parameters of model 
+model.params <- makeParamSet( 
+  makeNumericParam("cp", lower = 0, upper = 0.1),
+  makeIntegerParam("minsplit", lower = 5, upper = 20),
+  makeIntegerParam("minbucket", lower = 2, upper = 10)
+)
+
+#Hyperparameter tuning
+tuned.model2 <- tuneParams(learner    = lrn2,
+                             task       = regr.task.train2,
+                             resampling = cv.folds,
+                             par.set    = model.params,
+                             control    = random.tune,
+                             measures = list(rmse,mae),
+                             show.info  = TRUE)
+tuned.model2$x
+```
+############# Evaluation of Model #############
+```{r}
+
+lrn2 <- makeLearner("regr.rpart",par.vals = tuned.model2$x)
+
+res2 <- mlr::train(lrn2,regr.task.train2)
+rpc2 = rpart.control(minsplit = tuned.model2$x$minsplit, minbucket = tuned.model2$x$minbucket, cp = tuned.model2$x$cp
+                    )
+mod2 <- rpart(Max.Temperature ~ ., data = train2, control = rpc2)
+
+#Calucating the RMSE of training set 
+rmse_reg(mod2, testing = train2, target = "Max.Temperature")
+getLearnerModel(res2)
+
+rpart.plot(res2$learner.model,roundint=FALSE)
+
+```
+
+```{r}
+
+(mlrpred2   <- predict(res2, newdata = test2))
+
+#Calcuating the RMSE of test set
+
+sc2 <- performance(mlrpred2, measures = rmse) 
+
+print(sc2)
+
+```
+
+############### Station code: Godsamba ###############
+
+```{r}
+my_data3 <- read_excel('SCGod.xlsx')
+my_data3 <- as.data.frame(my_data3)
+
+glimpse(my_data3)
+
+my_data3$Station.Code<-NULL
+my_data3$Hour<-NULL
+my_data3$Year<-NULL
+my_data3$Month<-NULL
+my_data3$Day<-NULL
+
+str(my_data3)
+```
+
+```{r}
+# change categorical values to numerical values
+
+my_data3[my_data3=="C"]<-0
+my_data3[my_data3=="E"]<-9
+my_data3[my_data3=="S"]<-18
+my_data3[my_data3=="W"]<-27
+my_data3[my_data3=="N"]<-36
+my_data3[my_data3=="NNE"]<-2
+my_data3[my_data3=="ESE"]<-11
+my_data3[my_data3=="SSW"]<- 20
+my_data3[my_data3=="WNW"]<- 29
+my_data3[my_data3=="V"]<- 99
+my_data3[my_data3=="NE"]<- 5
+my_data3[my_data3=="SE"]<- 14
+my_data3[my_data3=="SW"]<- 23
+my_data3[my_data3=="NW"]<- 32
+my_data3[my_data3=="ENE"]<- 7
+my_data3[my_data3=="SSE"]<- 16
+my_data3[my_data3=="WSW"]<- 25
+my_data3[my_data3=="NNW"]<- 34
+
+my_data3$Wind.direction <- as.numeric(as.character(my_data3$Wind.direction))
+
+str(my_data3)
+```
+################## Histograms distribution of data ##################
+```{r}
+ggplot(my_data3, aes(x=my_data3$Min.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data3, aes(x=my_data3$Max.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data3, aes(x=my_data3$Temp.Dry.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data3, aes(x=my_data3$Temp.Wet.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data3, aes(x=my_data3$Inst.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data3, aes(x=my_data3$Av.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data3, aes(x=my_data3$Relative.Humidity)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data3, aes(x=my_data3$Temp...Pan.Water)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data3, aes(x=my_data3$Pan.Evaporation)) + geom_histogram()
+
+```
+################ Visualizing the Correlation matrix ################
+```{r}
+source("http://www.sthda.com/upload/rquery_cormat.r")
+require("corrplot")
+rquery.cormat(my_data3)
+```
+
+```{r}
+#Splitting the dataset
+
+sample3 <- sample.int(n = nrow(my_data3), size = floor(.75*nrow(my_data3)), replace = F)
+train3 <- my_data3[sample3, ]
+test3  <- my_data3[-sample3, ]
+
+#Regression Tree:Task Creation
+regr.task.train3<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(train3), 
+                        target = "Max.Temperature")
+
+regr.task.test3<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(test3), 
+                        target = "Max.Temperature")
+
+#Repeated cross validation
+cv.folds <- makeResampleDesc("CV", iters = 3)
+
+# Define model tuning algorithm ~ Random tune algorithm
+random.tune <- makeTuneControlRandom(maxit = 5)
+
+```
+
+```{r}
+set.seed(1)
+
+#Defining learner model
+lrn3 <- makeLearner("regr.rpart") 
+
+#Get parameter set of the learner
+getParamSet(lrn3)                        
+
+# Define parameters of model  
+model.params <- makeParamSet( 
+  makeNumericParam("cp", lower = 0, upper = 0.1),
+  makeIntegerParam("minsplit", lower = 5, upper = 20),
+  makeIntegerParam("minbucket", lower = 2, upper = 10)
+)
+
+#Hyperparameter tuning
+tuned.model3 <- tuneParams(learner    = lrn3,
+                             task       = regr.task.train3,
+                             resampling = cv.folds,
+                             par.set    = model.params,
+                             control    = random.tune,
+                             measures = list(rmse,mae),
+                             show.info  = TRUE)
+tuned.model3$x
+```
+############# Evaluation of Model #############
+```{r}
+lrn3 <- makeLearner("regr.rpart",par.vals = tuned.model3$x)
+
+res3 <- mlr::train(lrn3,regr.task.train3)
+rpc3 = rpart.control(minsplit = tuned.model3$x$minsplit, minbucket = tuned.model3$x$minbucket, cp = tuned.model3$x$cp
+                    )
+mod3 <- rpart(Max.Temperature ~ ., data = train3, control = rpc3)
+
+#Calucating the RMSE of training set 
+rmse_reg(mod3, testing = train3, target = "Max.Temperature")
+getLearnerModel(res3)
+
+rpart.plot(res3$learner.model,roundint=FALSE)
+
+```
+
+```{r}
+
+(mlrpred3   <- predict(res3, newdata = test3))
+
+#Calcuating the RMSE of test set
+
+sc3<- performance(mlrpred1, measures = rmse) 
+
+print(sc3)
+
+```
+
+############### Station code: Kakrapar ###############
+
+```{r}
+my_data4 <- read_excel('SCKakra.xlsx')
+my_data4 <- as.data.frame(my_data4)
+
+glimpse(my_data4)
+
+my_data4$Station.Code<-NULL
+my_data4$Hour<-NULL
+my_data4$Year<-NULL
+my_data4$Month<-NULL
+my_data4$Day<-NULL
+
+str(my_data4)
+```
+
+```{r}
+# change categorical values to numerical values
+
+my_data4[my_data4=="C"]<-0
+my_data4[my_data4=="E"]<-9
+my_data4[my_data4=="S"]<-18
+my_data4[my_data4=="W"]<-27
+my_data4[my_data4=="N"]<-36
+my_data4[my_data4=="NNE"]<-2
+my_data4[my_data4=="ESE"]<-11
+my_data4[my_data4=="SSW"]<- 20
+my_data4[my_data4=="WNW"]<- 29
+my_data4[my_data4=="V"]<- 99
+my_data4[my_data4=="NE"]<- 5
+my_data4[my_data4=="SE"]<- 14
+my_data4[my_data4=="SW"]<- 23
+my_data4[my_data4=="NW"]<- 32
+my_data4[my_data4=="ENE"]<- 7
+my_data4[my_data4=="SSE"]<- 16
+my_data4[my_data4=="WSW"]<- 25
+my_data4[my_data4=="NNW"]<- 34
+
+my_data4$Wind.direction <- as.numeric(as.character(my_data4$Wind.direction))
+
+str(my_data4)
+```
+################## Histograms distribution of data ##################
+```{r}
+ggplot(my_data4, aes(x=my_data4$Min.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data4, aes(x=my_data4$Max.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data4, aes(x=my_data4$Temp.Dry.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data4, aes(x=my_data4$Temp.Wet.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data4, aes(x=my_data4$Inst.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data4, aes(x=my_data4$Av.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data4, aes(x=my_data4$Relative.Humidity)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data4, aes(x=my_data4$Temp...Pan.Water)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data4, aes(x=my_data4$Pan.Evaporation)) + geom_histogram()
+
+```
+################ Visualizing the Correlation matrix ################
+```{r}
+source("http://www.sthda.com/upload/rquery_cormat.r")
+require("corrplot")
+rquery.cormat(my_data4)
+```
+
+```{r}
+#Splitting the dataset
+
+sample4 <- sample.int(n = nrow(my_data4), size = floor(.75*nrow(my_data4)), replace = F)
+train4 <- my_data4[sample4, ]
+test4  <- my_data4[-sample4, ]
+
+#Regression Tree:Task Creation
+regr.task.train4<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(train4), 
+                        target = "Max.Temperature")
+
+regr.task.test4<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(test4), 
+                        target = "Max.Temperature")
+
+#Repeated cross validation
+cv.folds <- makeResampleDesc("CV", iters = 3)
+
+# Define model tuning algorithm ~ Random tune algorithm
+random.tune <- makeTuneControlRandom(maxit = 5)
+```
+
+```{r}
+set.seed(1)
+
+#Defining learner model
+lrn4 <- makeLearner("regr.rpart") 
+
+#Get parameter set of the learner
+getParamSet(lrn4)                        
+
+# Define parameters of model and search grid 
+model.params <- makeParamSet( 
+  makeNumericParam("cp", lower = 0, upper = 0.1),
+  makeIntegerParam("minsplit", lower = 5, upper = 20),
+  makeIntegerParam("minbucket", lower = 2, upper = 10)
+)
+
+#Hyperparameter tuning
+tuned.model4 <- tuneParams(learner    = lrn4,
+                             task       = regr.task.train4,
+                             resampling = cv.folds,
+                             par.set    = model.params,
+                             control    = random.tune,
+                             measures = list(rmse,mae),
+                             show.info  = TRUE)
+tuned.model4$x
+```
+############# Evaluation of Model #############
+```{r}
+lrn4 <- makeLearner("regr.rpart",par.vals = tuned.model4$x)
+
+res4 <- mlr::train(lrn4,regr.task.train4)
+rpc4 = rpart.control(minsplit = tuned.model4$x$minsplit, minbucket = tuned.model4$x$minbucket, cp = tuned.model4$x$cp
+                    )
+mod4 <- rpart(Max.Temperature ~ ., data = train4, control = rpc4)
+
+#Calucating the RMSE of training set 
+rmse_reg(mod4, testing = train4, target = "Max.Temperature")
+getLearnerModel(res3)
+
+rpart.plot(res4$learner.model,roundint=FALSE)
+
+```
+
+```{r}
+
+
+(mlrpred4   <- predict(res4, newdata = test4))
+
+#Calcuating the RMSE of test set
+
+sc4 <- performance(mlrpred4, measures = rmse)
+
+print(sc4)
+
+```
+
+############### Station code: Rander ###############
+
+```{r}
+my_data5 <- read_excel('SCRan.xlsx')
+my_data5 <- as.data.frame(my_data5)
+
+glimpse(my_data5)
+
+my_data5$Station.Code<-NULL
+my_data5$Hour<-NULL
+my_data5$Year<-NULL
+my_data5$Month<-NULL
+my_data5$Day<-NULL
+
+str(my_data5)
+```
+
+```{r}
+# change categorical values to numerical values
+
+my_data5[my_data5=="C"]<-0
+my_data5[my_data5=="E"]<-9
+my_data5[my_data5=="S"]<-18
+my_data5[my_data5=="W"]<-27
+my_data5[my_data5=="N"]<-36
+my_data5[my_data5=="NNE"]<-2
+my_data5[my_data5=="ESE"]<-11
+my_data5[my_data5=="SSW"]<- 20
+my_data5[my_data5=="WNW"]<- 29
+my_data5[my_data5=="V"]<- 99
+my_data5[my_data5=="NE"]<- 5
+my_data5[my_data5=="SE"]<- 14
+my_data5[my_data5=="SW"]<- 23
+my_data5[my_data5=="NW"]<- 32
+my_data5[my_data5=="ENE"]<- 7
+my_data5[my_data5=="SSE"]<- 16
+my_data5[my_data5=="WSW"]<- 25
+my_data5[my_data5=="NNW"]<- 34
+
+my_data5$Wind.direction <- as.numeric(as.character(my_data5$Wind.direction))
+
+str(my_data5)
+```
+################## Histograms distribution of data ##################
+```{r}
+ggplot(my_data5, aes(x=my_data5$Min.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data5, aes(x=my_data5$Max.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data5, aes(x=my_data5$Temp.Dry.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data5, aes(x=my_data5$Temp.Wet.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data5, aes(x=my_data5$Inst.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data5, aes(x=my_data5$Av.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data5, aes(x=my_data5$Relative.Humidity)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data5, aes(x=my_data5$Temp...Pan.Water)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data5, aes(x=my_data5$Pan.Evaporation)) + geom_histogram()
+
+```
+################ Visualizing the Correlation matrix ################
+```{r}
+source("http://www.sthda.com/upload/rquery_cormat.r")
+require("corrplot")
+rquery.cormat(my_data5)
+```
+
+```{r}
+#Splitting the dataset
+
+sample5 <- sample.int(n = nrow(my_data5), size = floor(.75*nrow(my_data5)), replace = F)
+train5 <- my_data5[sample5, ]
+test5  <- my_data5[-sample5, ]
+
+#Regression Tree:Task Creation
+regr.task.train5<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(train5), 
+                        target = "Max.Temperature")
+
+regr.task.test5<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(test5), 
+                        target = "Max.Temperature")
+
+#Repeated cross validation
+cv.folds <- makeResampleDesc("CV", iters = 3)
+
+# Define model tuning algorithm ~ Random tune algorithm
+random.tune <- makeTuneControlRandom(maxit = 5)
+```
+
+```{r}
+set.seed(1)
+
+#Defining learner model
+lrn5 <- makeLearner("regr.rpart") 
+
+#Get parameter set of the learner
+getParamSet(lrn4)                        
+
+# Define parameters of model and search grid 
+model.params <- makeParamSet( 
+  makeNumericParam("cp", lower = 0, upper = 0.1),
+  makeIntegerParam("minsplit", lower = 5, upper = 20),
+  makeIntegerParam("minbucket", lower = 2, upper = 10)
+)
+
+#Hyperparameter tuning
+tuned.model5 <- tuneParams(learner    = lrn5,
+                             task       = regr.task.train5,
+                             resampling = cv.folds,
+                             par.set    = model.params,
+                             control    = random.tune,
+                             measures = list(rmse,mae),
+                             show.info  = TRUE)
+tuned.model5$x
+```
+############# Evaluation of Model #############
+```{r}
+lrn5 <- makeLearner("regr.rpart",par.vals = tuned.model5$x)
+
+res5 <- mlr::train(lrn5,regr.task.train5)
+rpc5 = rpart.control(minsplit = tuned.model5$x$minsplit, minbucket = tuned.model5$x$minbucket, cp = tuned.model5$x$cp
+                    )
+mod5 <- rpart(Max.Temperature ~ ., data = train5, control = rpc5)
+
+#Calucating the RMSE of training set 
+rmse_reg(mod5, testing = train5, target = "Max.Temperature")
+getLearnerModel(res5)
+
+rpart.plot(res5$learner.model,roundint=FALSE)
+
+```
+
+```{r}
+
+(mlrpred5   <- predict(res5, newdata = test5))
+
+#Calcuating the RMSE of test set
+
+sc5 <- performance(mlrpred5, measures = rmse)
+
+print(sc5)
+
+```
+
+############### Station code: Ukai ###############
+
+```{r}
+my_data6 <- read_excel('SCUkai.xlsx')
+my_data6 <- as.data.frame(my_data6)
+
+glimpse(my_data6)
+
+my_data6$Station.Code<-NULL
+my_data6$Hour<-NULL
+my_data6$Year<-NULL
+my_data6$Month<-NULL
+my_data6$Day<-NULL
+
+str(my_data6)
+```
+
+```{r}
+# change categorical values to numerical values
+
+my_data6[my_data6=="C"]<-0
+my_data6[my_data6=="E"]<-9
+my_data6[my_data6=="S"]<-18
+my_data6[my_data6=="W"]<-27
+my_data6[my_data6=="N"]<-36
+my_data6[my_data6=="NNE"]<-2
+my_data6[my_data6=="ESE"]<-11
+my_data6[my_data6=="SSW"]<- 20
+my_data6[my_data6=="WNW"]<- 29
+my_data6[my_data6=="V"]<- 99
+my_data6[my_data6=="NE"]<- 5
+my_data6[my_data6=="SE"]<- 14
+my_data6[my_data6=="SW"]<- 23
+my_data6[my_data6=="NW"]<- 32
+my_data6[my_data6=="ENE"]<- 7
+my_data6[my_data6=="SSE"]<- 16
+my_data6[my_data6=="WSW"]<- 25
+my_data6[my_data6=="NNW"]<- 34
+
+my_data6$Wind.direction <- as.numeric(as.character(my_data6$Wind.direction))
+
+str(my_data6)
+```
+################## Histograms distribution of data ##################
+```{r}
+ggplot(my_data6, aes(x=my_data6$Min.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data6, aes(x=my_data6$Max.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data6, aes(x=my_data6$Temp.Dry.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data6, aes(x=my_data6$Temp.Wet.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data6, aes(x=my_data6$Inst.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data6, aes(x=my_data6$Av.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data6, aes(x=my_data6$Relative.Humidity)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data6, aes(x=my_data6$Temp...Pan.Water)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data6, aes(x=my_data6$Pan.Evaporation)) + geom_histogram()
+
+```
+################ Visualizing the Correlation matrix ################
+```{r}
+source("http://www.sthda.com/upload/rquery_cormat.r")
+require("corrplot")
+rquery.cormat(my_data6)
+```
+
+```{r}
+#Splitting the dataset
+
+sample6 <- sample.int(n = nrow(my_data6), size = floor(.75*nrow(my_data6)), replace = F)
+train6 <- my_data6[sample6, ]
+test6  <- my_data6[-sample6, ]
+
+#Regression Tree:Task Creation
+regr.task.train6<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(train6), 
+                        target = "Max.Temperature")
+
+regr.task.test6<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(test6), 
+                        target = "Max.Temperature")
+
+#Repeated cross validation
+cv.folds <- makeResampleDesc("CV", iters = 3)
+
+# Define model tuning algorithm ~ Random tune algorithm
+random.tune <- makeTuneControlRandom(maxit = 5)
+```
+
+```{r}
+set.seed(1)
+
+#Defining learner model
+lrn6 <- makeLearner("regr.rpart") 
+
+#Get parameter set of the learner
+getParamSet(lrn6)                        
+
+# Define parameters of model
+model.params <- makeParamSet( 
+  makeNumericParam("cp", lower = 0, upper = 0.1),
+  makeIntegerParam("minsplit", lower = 5, upper = 20),
+  makeIntegerParam("minbucket", lower = 2, upper = 10)
+)
+
+#Hyperparameter tuning
+tuned.model6 <- tuneParams(learner    = lrn6,
+                             task       = regr.task.train6,
+                             resampling = cv.folds,
+                             par.set    = model.params,
+                             control    = random.tune,
+                             measures = list(rmse,mae),
+                             show.info  = TRUE)
+tuned.model6$x
+```
+############# Evaluation of Model #############
+```{r}
+lrn6 <- makeLearner("regr.rpart",par.vals = tuned.model6$x)
+
+res6 <- mlr::train(lrn6,regr.task.train6)
+rpc6 = rpart.control(minsplit = tuned.model6$x$minsplit, minbucket = tuned.model6$x$minbucket, cp = tuned.model6$x$cp
+                    )
+mod6 <- rpart(Max.Temperature ~ ., data = train6, control = rpc6)
+
+#Calucating the RMSE of training set
+rmse_reg(mod6, testing = train6, target = "Max.Temperature")
+getLearnerModel(res6)
+
+rpart.plot(res6$learner.model,roundint=FALSE)
+
+```
+
+```{r}
+
+(mlrpred6   <- predict(res6, newdata = test6))
+
+#Calcuating the RMSE of test set
+sc6 <- performance(mlrpred6, measures = rmse)
+print(sc6)
+
+```
+
+############### Station code: Olpad ###############
+
+```{r}
+my_data7 <- read_excel('SCOlpad.xlsx')
+my_data7 <- as.data.frame(my_data7)
+
+glimpse(my_data7)
+
+my_data7$Station.Code<-NULL
+my_data7$Hour<-NULL
+my_data7$Year<-NULL
+my_data7$Month<-NULL
+my_data7$Day<-NULL
+
+str(my_data7)
+```
+
+```{r}
+# change categorical values to numerical values
+
+my_data7[my_data7=="C"]<-0
+my_data7[my_data7=="E"]<-9
+my_data7[my_data7=="S"]<-18
+my_data7[my_data7=="W"]<-27
+my_data7[my_data7=="N"]<-36
+my_data7[my_data7=="NNE"]<-2
+my_data7[my_data7=="ESE"]<-11
+my_data7[my_data7=="SSW"]<- 20
+my_data7[my_data7=="WNW"]<- 29
+my_data7[my_data7=="V"]<- 99
+my_data7[my_data7=="NE"]<- 5
+my_data7[my_data7=="SE"]<- 14
+my_data7[my_data7=="SW"]<- 23
+my_data7[my_data7=="NW"]<- 32
+my_data7[my_data7=="ENE"]<- 7
+my_data7[my_data7=="SSE"]<- 16
+my_data7[my_data7=="WSW"]<- 25
+my_data7[my_data7=="NNW"]<- 34
+
+my_data7$Wind.direction <- as.numeric(as.character(my_data7$Wind.direction))
+
+str(my_data7)
+```
+################## Histograms distribution of data ##################
+```{r}
+ggplot(my_data7, aes(x=my_data7$Min.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data7, aes(x=my_data7$Max.Temperature)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data7, aes(x=my_data7$Temp.Dry.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data7, aes(x=my_data7$Temp.Wet.Bulb)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data7, aes(x=my_data7$Inst.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data7, aes(x=my_data7$Av.Wind.Speed)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data7, aes(x=my_data7$Relative.Humidity)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data7, aes(x=my_data7$Temp...Pan.Water)) + geom_histogram()
+
+```
+```{r}
+ggplot(my_data7, aes(x=my_data7$Pan.Evaporation)) + geom_histogram()
+
+```
+################ Visualizing the Correlation matrix ################
+```{r}
+source("http://www.sthda.com/upload/rquery_cormat.r")
+require("corrplot")
+rquery.cormat(my_data7)
+```
+
+```{r}
+#Splitting the dataset
+
+sample7 <- sample.int(n = nrow(my_data7), size = floor(.75*nrow(my_data7)), replace = F)
+train7 <- my_data7[sample7, ]
+test7  <- my_data7[-sample7, ]
+
+#Regression Tree:Task Creation
+regr.task.train7<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(train7), 
+                        target = "Max.Temperature")
+
+regr.task.test7<-makeRegrTask(id  = "Tin_regr", 
+                        data   = data.frame(test7), 
+                        target = "Max.Temperature")
+
+#Repeated cross validation
+cv.folds <- makeResampleDesc("CV", iters = 3)
+
+# Define model tuning algorithm ~ Random tune algorithm
+random.tune <- makeTuneControlRandom(maxit = 5)
+```
+
+```{r}
+set.seed(1)
+
+#Defining learner model
+lrn7 <- makeLearner("regr.rpart") 
+
+#Get parameter set of the learner
+getParamSet(lrn7)                        
+
+# Define parameters of model 
+model.params <- makeParamSet( 
+  makeNumericParam("cp", lower = 0, upper = 0.1),
+  makeIntegerParam("minsplit", lower = 5, upper = 20),
+  makeIntegerParam("minbucket", lower = 2, upper = 10)
+)
+
+#Hyperparameter tuning
+tuned.model7 <- tuneParams(learner    = lrn7,
+                             task       = regr.task.train7,
+                             resampling = cv.folds,
+                             par.set    = model.params,
+                             control    = random.tune,
+                             measures = list(rmse,mae),
+                             show.info  = TRUE)
+tuned.model7$x
+```
+############# Evaluation of Model #############
+```{r}
+
+lrn7 <- makeLearner("regr.rpart",par.vals = tuned.model7$x)
+
+res7 <- mlr::train(lrn7,regr.task.train7)
+rpc7 = rpart.control(minsplit = tuned.model7$x$minsplit, minbucket = tuned.model7$x$minbucket, cp = tuned.model7$x$cp
+                    )
+mod7 <- rpart(Max.Temperature ~ ., data = train7, control = rpc7)
+
+#Calucating the RMSE of training set 
+rmse_reg(mod7, testing = train7, target = "Max.Temperature")
+getLearnerModel(res7)
+
+rpart.plot(res7$learner.model,roundint=FALSE)
+
+```
+
+```{r}
+
+(mlrpred7 <- predict(res7, newdata = test7))
+
+#Calcuating the RMSE of test set
+sc7 <- performance(mlrpred7, measures = rmse)
+
+print(sc7)
+
+```
+############# Cummulative RMSE of all Station Code #############
+```{r}
+
+RMSE = (sc1+sc2+sc3+sc4+sc5+sc6+sc7)/7
+print(RMSE)
+
+```
+
