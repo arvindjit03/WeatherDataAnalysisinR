@@ -25,4 +25,4 @@ We have different files for predictive and trend analysis, below are the details
 4) TA_Month.Rmd : includes all the code used for trend analysis based on stations and their results. <br />
 5) TA_Result_Viz.Rmd : includes all the visualizations used for trend analysis
 
-Note: Download all the Rmd files and thier respective input read files and put them in same path location.
+Note: Download all the Rmd files and their respective input read files and put them in same path location.
