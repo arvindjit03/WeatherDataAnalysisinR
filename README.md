@@ -1,7 +1,23 @@
 # WeatherDataAnalysisinR
 This project intends to provide a comparative model and data analysis report which could be helpful in weather dependent resource planning. We have used two predictive algorithms namely Linear regression and Regression Tree. For trend analysis we have implemented a two fold analysis approach based on Months and Station locations using two non-parametric methods namely, Mann-Kendall method and Sen's Slope Method.
 
-Data set used: <br/>
+###Process Notebook:
+The DSWR Process Notebook.Rmd describes the course of the project. This also includes deviations from the initially proposal and further information about the evaluaton of our project.
+
+###Website:
+The website can be found at https://sites.google.com/view/dswrweather/home
+###Screencast:
+The screencast can be found embedded on the website mentioned above or can be accessed directly on YouTube : https://www.youtube.com/watch?v=jZp-fKNxvwc
+
+###Data set used: <br/>
 Step 1) The main dataset used for our analysis Weather_dataset.xlsx. <br/>
 Step 2) We have used FinalModifiedData.xslx file for our project <br/>
-Step 3) For Station-based, predictions as well as for trend analysis we have used different files that all are present in our git repository which are all added to folder Station code <br/>
+Step 3) For Station-based, predictions as well as for trend analysis we have used different files that all are present in folder Station code <br/>
+
+####Main files:
+
+We have different files for predictive and trend analysis, below are the details:
+
+1) LinearRegression.Rmd : contains the code and logic behind the implementation of the model along with the results.<br/>
+2) RegressionTree.Rmd : includes all the code used for creating the different models and their evaluation results. <br />
+
