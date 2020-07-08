@@ -1,0 +1,764 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Install and load required package libraries
+```{r}
+#install.packages("Kendall")
+#install.packages("trend")
+
+library(Kendall)
+library(modifiedmk)
+library(trend)
+library(tidyverse)
+library(dplyr)
+```
+```{r}
+library("readxl")
+trend_analysis <- read_excel("D:\\OVGU\\Courses\\DSWR\\Project\\FinalModifiedData.xlsx")
+tadata = data.frame(trend_analysis)
+
+print(tadata)
+```
+```{r}
+keep <- c("Station.Code", "Month","Max.Temperature")
+df = tadata[keep]
+print(df)
+tadata %>% distinct(Station.Code)
+```
+```{r}
+Jan_data <- filter(df, Month == 1)
+Feb_data	<- filter(df, Month == 2)			
+Mar_data <- filter(df, Month == 3)				
+Apr_data <- filter(df, Month == 4)				
+May_data	<- filter(df, Month == 5)			
+Jun_data <- filter(df, Month == 6)				
+Jul_data <- filter(df, Month == 7)
+Aug_data <- filter(df, Month == 8)
+Sep_data <- filter(df, Month == 9)
+Oct_data <- filter(df, Month == 10)
+Nov_data <- filter(df, Month == 11)
+Dec_data <- filter(df, Month == 12)
+```
+```{r}
+df_Jan <- Jan_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Jan)
+
+TS_Jan = ts(df_Jan$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_Jan)
+```
+# Plot the graph
+```{r}
+
+
+
+ggplot(data=df_Jan, aes(x=Station.Code, y=Mean_MaxTemp)) + geom_point(fill = "brown", colour = "red") + labs(title = "Maximum Temperature for January", y = "Maximum Temperature", x = "Station Name") +     theme(axis.text.x = element_text(face = "bold", size=12, angle = 30),
+          axis.text.y = element_text(face = "bold", size=12, angle=0),
+          plot.title = element_text(size=15), legend.position="None")
+#plot(decompose(TS_Amli))
+#plot(stl(TS_Amli, s.window="periodic"))
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Jan')
+MK_Jan = MannKendall(TS_Jan)
+
+summary(MK_Amli)
+
+mk.test(TS_Jan, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for Amli')
+SMK_Jan = SeasonalMannKendall(TS_Jan)
+
+summary(SMK_Amli)
+
+# print('Vector Value')
+Jan_vec <- df_Jan[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_Jan)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Jan)
+```
+
+```{r}
+df_Jan[4,]
+```
+
+```{r}
+df_Feb <- Feb_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Feb)
+
+TS_Feb = ts(df_Feb$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_Feb)
+
+plot(TS_Feb)
+lines(lowess(time(TS_Feb),TS_Feb), col='blue', lwd=2)
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Feb')
+MK_Feb = MannKendall(TS_Feb)
+
+summary(MK_Feb)
+
+mk.test(TS_Feb, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for Feb')
+SMK_Feb = SeasonalMannKendall(TS_Feb)
+
+summary(SMK_Feb)
+
+# print('Vector Value')
+Feb_vec <- df_Feb[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_Feb)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Feb)
+```
+```{r}
+df_Mar <- Mar_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Mar)
+
+TS_Mar = ts(df_Mar$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_Mar)
+
+plot(TS_Mar)
+lines(lowess(time(TS_Mar),TS_Mar), col='blue', lwd=2)
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Mar')
+MK_Mar = MannKendall(TS_Mar)
+
+summary(MK_Mar)
+
+mk.test(TS_Mar, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for Mar')
+SMK_Mar = SeasonalMannKendall(TS_Mar)
+
+summary(SMK_Mar)
+
+# print('Vector Value')
+Mar_vec <- df_Mar[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_Mar)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Mar)
+```
+```{r}
+df_Apr <- Apr_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Apr)
+
+TS_Apr = ts(df_Apr$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_Apr)
+
+plot(TS_Apr)
+lines(lowess(time(TS_Apr),TS_Apr), col='blue', lwd=2)
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Apr')
+MK_Apr = MannKendall(TS_Apr)
+
+summary(MK_Apr)
+
+mk.test(TS_Apr, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for Apr')
+SMK_Apr = SeasonalMannKendall(TS_Apr)
+
+summary(SMK_Apr)
+
+# print('Vector Value')
+Apr_vec <- df_Apr[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_Apr)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Apr)
+```
+```{r}
+df_May <- May_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_May)
+
+TS_May = ts(df_May$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_May)
+
+plot(TS_May)
+lines(lowess(time(TS_May),TS_May), col='blue', lwd=2)
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Apr')
+MK_May = MannKendall(TS_May)
+
+summary(MK_May)
+
+mk.test(TS_May, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for May')
+SMK_May = SeasonalMannKendall(TS_May)
+
+summary(SMK_May)
+
+# print('Vector Value')
+May_vec <- df_May[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_May)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_May)
+```
+```{r}
+df_Jun <- Jun_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Jun)
+
+TS_Jun = ts(df_Jun$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_Jun)
+
+plot(TS_Jun)
+lines(lowess(time(TS_Jun),TS_Jun), col='blue', lwd=2)
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Jun')
+MK_Jun = MannKendall(TS_Jun)
+
+summary(MK_Jun)
+
+mk.test(TS_Jun, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for May')
+SMK_Jun = SeasonalMannKendall(TS_Jun)
+
+summary(SMK_Jun)
+
+# print('Vector Value')
+Jun_vec <- df_Jun[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_Jun)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Jun)
+```
+```{r}
+df_Jul <- Jul_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Jul)
+
+TS_Jul = ts(df_Jul$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_Jul)
+
+plot(TS_Jul)
+lines(lowess(time(TS_Jul),TS_Jul), col='blue', lwd=2)
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Jul')
+MK_Jul = MannKendall(TS_Jul)
+
+summary(MK_Jul)
+
+mk.test(TS_Jul, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for Jul')
+SMK_Jul = SeasonalMannKendall(TS_Jul)
+
+
+summary(SMK_Jul)
+
+# print('Vector Value')
+Jul_vec <- df_Jul[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_Jul)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Jul)
+```
+```{r}
+df_Aug <- Aug_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Aug)
+
+TS_Aug = ts(df_Aug$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_Aug)
+
+plot(TS_Aug)
+lines(lowess(time(TS_Aug),TS_Aug), col='blue', lwd=2)
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Aug')
+MK_Aug = MannKendall(TS_Aug)
+
+summary(MK_Aug)
+
+mk.test(TS_Aug, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for Aug')
+SMK_Aug = SeasonalMannKendall(TS_Aug)
+
+summary(SMK_Aug)
+
+# print('Vector Value')
+Aug_vec <- df_Aug[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_Aug)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Aug)
+```
+```{r}
+df_Sep <- Sep_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Sep)
+
+TS_Sep = ts(df_Sep$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_Sep)
+
+plot(TS_Sep)
+lines(lowess(time(TS_Sep),TS_Sep), col='blue', lwd=2)
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Sep')
+MK_Sep = MannKendall(TS_Sep)
+
+summary(MK_Sep)
+
+mk.test(TS_Sep, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for Aug')
+SMK_Sep = SeasonalMannKendall(TS_Sep)
+
+summary(SMK_Sep)
+
+# print('Vector Value')
+Sep_vec <- df_Sep[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_Sep)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Sep)
+```
+```{r}
+df_Oct <- Oct_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Oct)
+
+TS_Oct = ts(df_Oct$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_Oct)
+
+plot(TS_Oct)
+lines(lowess(time(TS_Oct),TS_Oct), col='blue', lwd=2)
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Sep')
+MK_Oct = MannKendall(TS_Oct)
+
+summary(MK_Oct)
+
+mk.test(TS_Oct, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for Aug')
+SMK_Oct = SeasonalMannKendall(TS_Oct)
+
+summary(SMK_Oct)
+
+# print('Vector Value')
+Oct_vec <- df_Oct[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_Oct)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Oct)
+```
+```{r}
+df_Nov <- Nov_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Nov)
+
+TS_Nov = ts(df_Nov$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_Nov)
+
+plot(TS_Nov)
+lines(lowess(time(TS_Nov),TS_Nov), col='blue', lwd=2)
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Nov')
+MK_Nov = MannKendall(TS_Nov)
+
+summary(MK_Nov)
+
+mk.test(TS_Nov, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for Aug')
+SMK_Nov = SeasonalMannKendall(TS_Nov)
+
+summary(SMK_Nov)
+
+# print('Vector Value')
+Nov_vec <- df_Nov[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_Nov)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Nov)
+```
+
+```{r}
+df_Dec <- Dec_data %>% 
+            group_by(Month,Station.Code) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Dec)
+
+TS_Dec = ts(df_Dec$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+print(TS_Dec)
+
+plot(TS_Dec)
+lines(lowess(time(TS_Dec),TS_Dec), col='blue', lwd=2)
+```
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Dec')
+MK_Dec = MannKendall(TS_Dec)
+
+summary(MK_Dec)
+
+mk.test(TS_Dec, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for Aug')
+SMK_Dec = SeasonalMannKendall(TS_Dec)
+
+summary(SMK_Dec)
+
+# print('Vector Value')
+Dec_vec <- df_Dec[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+#cat('\n')
+#print('Modified MK Test')
+#mmkh(Jan_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+#cat('\n')
+#print('Modified MK Test with prewhitening')
+#pwmk(Jan_vec)
+
+#cat('\n')
+#print('Spearman Coefficient')
+#spear(Jan_vec)
+
+sens.slope(TS_Dec)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Dec)
+```
