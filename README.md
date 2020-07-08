@@ -21,4 +21,8 @@ We have different files for predictive and trend analysis, below are the details
 
 1) LinearRegression.Rmd : contains the code and logic behind the implementation of the model along with the results.<br/>
 2) RegressionTree.Rmd : includes all the code used for creating the different models and their evaluation results. <br />
+3) TrendAnalysis.Rmd : includes all the code used for trend analysis based on stations and their results. <br />
+4) TA_Month.Rmd : includes all the code used for trend analysis based on stations and their results. <br />
+5) TA_Result_Viz.Rmd : includes all the visualizations used for trend analysis
 
+Note: Download all the Rmd files and thier respective input read files and put them in same path location.
