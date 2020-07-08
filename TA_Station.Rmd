@@ -1,0 +1,471 @@
+---
+title: "TrendAnalysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Install and load required package libraries
+```{r}
+#install.packages("Kendall")
+#install.packages("trend")
+
+library(Kendall)
+library(modifiedmk)
+library(trend)
+library(tidyverse)
+library(dplyr)
+```
+
+# Read data for trend analysis
+```{r}
+library("readxl")
+trend_analysis <- read_excel("FinalModifiedData.xlsx")
+tadata = data.frame(trend_analysis)
+
+print(tadata)
+```
+# Select Distinct Station codes from Dataframe
+```{r}
+tadata %>% distinct(Station.Code)
+```
+
+# Station wise data
+```{r}
+Amli_data <- filter(tadata, Station.Code == 'Amli')
+Chopadvav_data	<- filter(tadata, Station.Code == 'Chopadvav')			
+Godsamba_data <- filter(tadata, Station.Code == 'Godsamba')				
+Kakrapar_data <- filter(tadata, Station.Code == 'Kakrapar')				
+Olpad_data	<- filter(tadata, Station.Code == 'Olpad')			
+Rander_data <- filter(tadata, Station.Code == 'Rander')				
+Ukai_data <- filter(tadata, Station.Code == 'Ukai')
+print(Amli_data)
+print(Chopadvav_data)
+print(Godsamba_data)
+print(Kakrapar_data)
+print(Olpad_data)
+print(Rander_data)
+print(Ukai_data)
+```
+
+# Station wise yearly trend analysis of max temp
+# For Station Code "AMLI"
+```{r}
+df_Amli <- Amli_data %>% 
+            group_by(Year,Month) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Amli)
+
+TS_Amli = ts(df_Amli$Mean_MaxTemp,
+        frequency=12,
+        start=c(2000))
+
+print(TS_Amli)
+```
+
+# Plot the graph
+```{r}
+plot(TS_Amli)
+lines(lowess(time(TS_Amli),TS_Amli), col='blue', lwd=2)
+plot(decompose(TS_Amli))
+plot(stl(TS_Amli, s.window="periodic"))
+```
+
+# Trend Analysis 
+```{r}
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+### A very high positive value of S is an indicator of an increasing trend and a very low negative value indicates a decreasing trend. The presence of a statistically significant trend is evaluated using Z value.
+###  tau is a measure of the strength of the trend
+###  p-value for trend is also shown
+
+print('Mann- Kendall Test for Amli')
+MK_Amli = MannKendall(TS_Amli)
+summary(MK_Amli)
+
+mk.test(TS_Amli, continuity = TRUE)
+
+cat('\n')
+print('Seasonal Mann- Kendall Test for Amli')
+SMK_Amli = SeasonalMannKendall(TS_Amli)
+summary(SMK_Amli)
+
+# print('Vector Value')
+Amli_vec <- df_Amli[['Mean_MaxTemp']]
+# mkttest(Amli_vec)
+
+### Modified Mann-Kendall Test For Serially Correlated Data Using the Hamed and Rao (1998) Variance Correction Approach
+cat('\n')
+print('Modified MK Test')
+mmkh(Amli_vec,ci=0.95)
+
+### Mann-Kendall Test of Prewhitened Time Series Data in Presence of Serial Correlation Using the von Storch (1995) Approach
+cat('\n')
+print('Modified MK Test with prewhitening')
+pwmk(Amli_vec)
+
+cat('\n')
+print('Spearman Coefficient')
+spear(Amli_vec)
+
+sens.slope(TS_Amli)
+### A positive value of Sen's slope indicates an upward or increasing trend and a negative value gives a downward or decreasing trend in the time series.
+
+pettitt.test(TS_Amli)
+
+```
+
+# Point of Change for Station Amli
+```{r}
+df_Amli[66,]
+```
+
+# For Station Code "CHOPADVAV"
+```{r}
+df_Chop <- Chopadvav_data %>% 
+            group_by(Year,Month) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Chop)
+
+TS_Chop = ts(df_Chop$Mean_MaxTemp,
+        frequency=12,
+        start=c(1999))
+
+print(TS_Chop)
+```
+
+# Plot the graph
+```{r}
+plot(TS_Chop)
+lines(lowess(time(TS_Chop),TS_Chop), col='blue')
+plot(decompose(TS_Chop))
+plot(stl(TS_Chop, s.window="periodic"))
+```
+
+# Trend Analysis 
+```{r}
+print('Mann- Kendall Test for Chopadvav')
+MK_Chop = MannKendall(TS_Chop)
+summary(MK_Chop)
+
+mk.test(TS_Chop, continuity = TRUE)
+
+print('Seasonal Mann- Kendall Test for Chopadvav')
+SMK_Chop = SeasonalMannKendall(TS_Chop)
+summary(SMK_Chop)
+
+Chop_vec <- df_Chop[['Mean_MaxTemp']]
+
+cat('\n')
+print('Modified MK Test')
+mmkh(Chop_vec,ci=0.95)
+
+cat('\n')
+print('Modified MK Test with prewhitening')
+pwmk(Chop_vec)
+
+sens.slope(TS_Chop)
+
+pettitt.test(TS_Chop)
+
+```
+# Point of Change for Station Chopadvav
+```{r}
+df_Chop[54,]
+```
+
+# For Station Code "GODSAMBA"				
+```{r}
+df_God <- Godsamba_data %>% 
+            group_by(Year,Month) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_God)
+
+TS_God = ts(df_God$Mean_MaxTemp,
+        frequency=12,
+        start=c(1999))
+
+print(TS_God)
+```
+
+# Plot the graph
+```{r}
+plot(TS_God)
+lines(lowess(time(TS_God),TS_God), col='blue')
+plot(decompose(TS_God))
+plot(stl(TS_God, s.window="periodic"))
+```
+
+# Trend Analysis 
+```{r}
+print('Mann- Kendall Test for Godsamba')
+MK_God = MannKendall(TS_God)
+summary(MK_God)
+
+mk.test(TS_God, continuity = TRUE)
+
+print('Seasonal Mann- Kendall Test for Godsamba')
+SMK_God = SeasonalMannKendall(TS_Chop)
+summary(SMK_God)
+
+God_vec <- df_God[['Mean_MaxTemp']]
+
+cat('\n')
+print('Modified MK Test')
+mmkh(God_vec,ci=0.95)
+
+cat('\n')
+print('Modified MK Test with prewhitening')
+pwmk(God_vec)
+
+sens.slope(TS_God)
+
+pettitt.test(TS_God)
+```
+# Point of Change for Station Godsamba
+```{r}
+df_God[24,]
+```
+
+# For Station Code "KAKRAPAR"				
+
+```{r}
+df_Kak <- Kakrapar_data %>% 
+            group_by(Year,Month) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Kak)
+
+TS_Kak = ts(df_Kak$Mean_MaxTemp,.
+            
+            
+            
+            
+        frequency=12,
+        start=c(2000))
+
+print(TS_Kak)
+```
+
+# Plot the graph
+```{r}
+plot(TS_Kak)
+lines(lowess(time(TS_Kak),TS_Kak), col='blue')
+plot(decompose(TS_Kak))
+plot(stl(TS_Kak, s.window="periodic"))
+```
+
+# Trend Analysis 
+```{r}
+print('Mann- Kendall Test for Kakrapar')
+MK_Kak = MannKendall(TS_Kak)
+summary(MK_Kak)
+
+mk.test(TS_Kak, continuity = TRUE)
+
+print('Seasonal Mann- Kendall Test for Kakrapar')
+SMK_Kak = SeasonalMannKendall(TS_Kak)
+summary(SMK_Kak)
+
+Kak_vec <- df_Kak[['Mean_MaxTemp']]
+
+cat('\n')
+print('Modified MK Test')
+mmkh(Kak_vec,ci=0.95)
+
+cat('\n')
+print('Modified MK Test with prewhitening')
+pwmk(Kak_vec)
+
+sens.slope(TS_Kak)
+
+pettitt.test(TS_Kak)
+```
+
+# Point of Change for Station Kakrapar
+```{r}
+df_Kak[81,]
+```
+
+# For Station Code "OLPAD"				
+
+```{r}
+df_Olp <- Olpad_data %>% 
+            group_by(Year,Month) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Olp)
+                
+TS_Olp = ts(df_Olp$Mean_MaxTemp,
+        frequency=12,
+        start=c(1999))
+
+print(TS_Olp)
+```
+
+# Plot the graph
+```{r}
+plot(TS_Olp)
+lines(lowess(time(TS_Olp),TS_Olp), col='blue')
+plot(decompose(TS_Olp))
+plot(stl(TS_Olp, s.window="periodic"))
+```
+
+# Trend Analysis 
+```{r}
+print('Mann- Kendall Test for Olpad')
+MK_Olp = MannKendall(TS_Olp)
+summary(MK_Olp)
+
+mk.test(TS_Olp, continuity = TRUE)
+
+print('Seasonal Mann- Kendall Test for Olpad')
+SMK_Olp = SeasonalMannKendall(TS_Olp)
+summary(SMK_Olp)
+
+Olp_vec <- df_Olp[['Mean_MaxTemp']]
+
+cat('\n')
+print('Modified MK Test')
+mmkh(Olp_vec,ci=0.95)
+
+cat('\n')
+print('Modified MK Test with prewhitening')
+pwmk(Olp_vec)
+
+sens.slope(TS_Olp)
+
+pettitt.test(TS_Olp)
+```
+
+# Point of Change for Station Olpad
+```{r}
+df_Olp[33,]
+```
+
+# For Station Code "RANDER"			
+
+```{r}
+df_Ran <- Rander_data %>% 
+            group_by(Year,Month) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Ran)
+
+TS_Ran = ts(df_Ran$Mean_MaxTemp,
+        frequency=12,
+        start=c(1999))
+
+print(TS_Ran)
+```
+
+# Plot the graph
+```{r}
+plot(TS_Ran)
+lines(lowess(time(TS_Ran),TS_Ran), col='blue')
+plot(decompose(TS_Ran))
+plot(stl(TS_Ran, s.window="periodic"))
+```
+
+# Trend Analysis 
+```{r}
+print('Mann- Kendall Test for Rander')
+MK_Ran = MannKendall(TS_Ran)
+summary(MK_Ran)
+
+mk.test(TS_Ran, continuity = TRUE)
+
+print('Seasonal Mann- Kendall Test for Rander')
+SMK_Ran = SeasonalMannKendall(TS_Ran)
+summary(SMK_Ran)
+
+Ran_vec <- df_Ran[['Mean_MaxTemp']]
+
+cat('\n')
+print('Modified MK Test')
+mmkh(Ran_vec,ci=0.95)
+
+cat('\n')
+print('Modified MK Test with prewhitening')
+pwmk(Ran_vec)
+
+sens.slope(TS_Ran)
+
+pettitt.test(TS_Ran)
+```
+
+# Point of Change for Station Rander
+```{r}
+df_Ran[46,]
+```
+
+# For Station Code "Ukai"				
+```{r}
+df_Ukai <- Ukai_data %>% 
+            group_by(Year,Month) %>% 
+              summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+print(df_Ukai)
+
+TS_Ukai = ts(df_Ukai$Mean_MaxTemp,
+        frequency=12,
+        start=c(1999))
+
+print(TS_Ukai)
+```
+
+# Plot the graph
+```{r}
+plot(TS_Ukai)
+lines(lowess(time(TS_Ukai),TS_Ukai), col='blue')
+plot(decompose(TS_Ukai))
+plot(stl(TS_Ukai, s.window="periodic"))
+```
+
+# Trend Analysis 
+```{r}
+print('Mann- Kendall Test for Ukai')
+MK_Ukai = MannKendall(TS_Ukai)
+summary(MK_Ukai)
+
+mk.test(TS_Ukai, continuity = TRUE)
+
+print('Seasonal Mann- Kendall Test for Ukai')
+SMK_Ukai = SeasonalMannKendall(TS_Ukai)
+summary(SMK_Ukai)
+
+Ukai_vec <- df_Ukai[['Mean_MaxTemp']]
+
+cat('\n')
+print('Modified MK Test')
+mmkh(Ukai_vec,ci=0.95)
+
+cat('\n')
+print('Modified MK Test with prewhitening')
+pwmk(Ukai_vec)
+
+sens.slope(TS_Ukai)
+
+pettitt.test(TS_Ukai)
+```
+
+# Point of Change for Station Ukai
+```{r}
+df_Ukai[50,]
+```
+
+
+
+
+
+
+
+
+
+
+
+

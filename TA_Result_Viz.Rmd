@@ -1,0 +1,31 @@
+```{r}
+library(Kendall)
+library(modifiedmk)
+library(trend)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+```{r}
+library("readxl")
+Result <- read_excel("Results_Month.xlsx")
+result_df = data.frame(Result)
+
+print(result_df)
+```
+```{r}
+ggplot(data=result_df, aes(x=factor(Month,levels = month.abb),y=MK_S),col=Month) + geom_col(fill = "brown", colour = "red") + labs(title = "Mann-Kendall Number per Month", y = "Mann-Kendall Number", x = "Month") +     theme(axis.text.x = element_text(face = "bold", size=12, angle = 30),
+          axis.text.y = element_text(face = "bold", size=12, angle=0),
+          plot.title = element_text(size=15), legend.position="None")
+```
+```{r}
+StationResult <- read_excel("Results_Station.xlsx")
+ResultStation_df = data.frame(StationResult)
+
+(ResultStation_df)
+```
+```{r}
+ggplot(data=ResultStation_df, aes(x=Station,y=MK_S),col=Station) + geom_col(fill = "brown", colour = "red") + labs(title = "Mann-Kendall Number per Station", y = "Mann-Kendall Number", x = "Station Name") +     theme(axis.text.x = element_text(face = "bold", size=12, angle = 30),
+          axis.text.y = element_text(face = "bold", size=12, angle=0),
+          plot.title = element_text(size=15), legend.position="None")
+```
