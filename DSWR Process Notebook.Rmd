@@ -1,0 +1,301 @@
+---
+title: "Process Notebook"
+author: "Aparajeeta Jha<br />Arvindjit Singh<br />Madhu<br />Shubham Manekar<br />"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+## Title: Weather Data Analysis using Machine Learning algorithms and Trend Analysis
+
+### Overview
+#### Machine Learning has been a major contributor to the technical advancements of weather forecasting. The primary reason is the preciseness of the results and the easy availability of huge data. Machine learning and trend analysis algorithms do not need to learn the physical aspects of weather dependencies, they can predict based on the historical data alone, which makes them effective in prediction results and efficient in terms of computational resources.The detection and estimation of trends and associated statistical and physical significance are important aspects of climate research especially in the field of Agriculture industry. Trend analysis provides a concrete base in efficiently managing resources in crop cultivation and agriculture. Here in this study, we are focusing on trend detection and analysis of Maximum temperature in the weather dataset.
+
+#### <br /> We have chosen max temperature as our primary target attribute because, Maximum Temperature is an important factor in determining the rate of evaporation of water, hydroelectric power generation, domestic and industrial water supply and Agriculture. The trend analysis and Machine Learning predictions of temperature (Arora et al., 2005; Karanurun and Kara,2011; Meshram et al., 2018) and other climatic variables on different spatial scales will help in the construction of future climate scenarios (Panda and Sahu, 2019).
+
+
+#### <br /> This project intends to provide a comparative model and data analysis report which could be helpful in agricultural planning. We have used two predictive algorithms namely Linear regression and Regression Tree. For trend analysis we have implemented a two fold analysis approach based on Months and Station locations using two non-parametric methods namely, Mann-Kendall method and Sen's Slope Method.
+
+### <br /> Data
+#### It is a weather dataset of 7 weather stations in Gujarat, India obtained from the Indian meteorological department, Pune. It contains two readings at 08:30 and 17:30, every day from the year 1999 to 2014. The dataset has 76706 records and contains 15 attributes. 
+
+##### (Source: IMD,Pune,India http://www.imdpune.gov.in/ )
+
+### <br /> Initial and Final Research Questions
+#### Initial Research Questions: <br />
+#### 1.	To build regression models on weather dataset to predict the maximum temperature value with RMSE less than 4.0
+#### 2.	To analyse maximum temperature’s trend of fifteen years on weather dataset and learn models to implicate its future trend for next five years. Trend analysis includes the study of rate of change of parameter, the direction of change (Incremental or decremental) and graphical visualisation of the analysis.
+
+
+#### <br /> Final Research Questions: <br />
+
+#### As we started working on the project and got a better understanding of the data and analytical approaches, research questions evolved. The Final research questions are stated below.
+#### 1. To find the trend with values in 95% Confidence Interval.
+#### 2. To detect and analyze trend with station wise approach.
+#### 3. To detect and analyze trend with Month wise approach.
+#### 4. To provide a combined analysis based on both the approaches.
+#### 5. To find the attribute correlation and prediction for RMSE errors less than 3.0
+
+### <br /> Exploratory Data Analysis
+### Outlier and Missing values removal:<br />
+#### From the first plot, we can infer that for Min.Temperature the Median is around 22 degrees Celsius. On the other hand, for both Max.Temperature and Temp. Dry Bulb the median is around 33 degrees Celsius and 28 degrees Celsius respectively.
+
+#### If we talk about the data, then from all the 3 boxes for Min temperature the box looks more compressed(data values lie between the range 20-27) as compared to the other two variables.
+
+#### For each variable, there are outliers that are present outside the range of the plot.The second plot is of 3 different variables from the dataset. In the plot, it's clear that the median is varying for all the three given variables. For Temp.Wet Bulb is around 24 degrees Celsius, whereas for Relative Humidity it is around 70-72 and 2.6-2.8 for Inst.Wind.Speed respectively.In the last plot, we have two variables, Pan Evaporation and Pan Water. The median for the first is around 2.7 and 27 for the later.
+
+```{r}
+library(dplyr)
+library(Hmisc)
+library(ggplot2)
+library(readxl)
+my_data <- read_excel("FinalModifiedData.xlsx")
+my_data <- as.data.frame(my_data)
+
+glimpse(my_data)
+
+# Removing the Time variables from the dataset
+my_data$Station.Code<-NULL
+my_data$Hour<-NULL
+my_data$Year<-NULL
+my_data$Month<-NULL
+my_data$Day<-NULL
+
+str(my_data)
+
+```
+```{r}
+# Create separate boxplots for each attribute
+par(mfrow=c(1,3))
+for(i in 1:3) {
+	boxplot(my_data[,i], main=names(my_data)[i])
+}
+
+```
+```{r}
+par(mfrow=c(1,3))
+for(i in 4:6) {
+	boxplot(my_data[,i], main=names(my_data)[i])
+}
+```
+```{r}
+par(mfrow=c(1,3))
+for(i in 8:9)
+{
+    
+  boxplot(my_data[,i], main=names(my_data)[i])
+}
+```
+
+### <br /> Correlation Matrix Inference: <br />
+#### From the correlation plot it is evident that there is a positive correlation between:
+
+#### 1. Max. Temperature and Temp.Dry Bulb
+#### 2. Temp.Dry bulb and Temp.Wet Bulb
+#### 3. Temp.Wet Bulb and Min.Temperature 
+
+#### <br /> There is a negative correlation between the following variables:
+
+#### 1. Relative Humidity and Max.temp
+#### 2. Relative Humidity and Temp.dry bulb
+#### 3. Relative Humidity and Pan Evaporation
+
+#### We used IQR method to remove outliers and mean values to impute numerical missing values. To deal with missing categorical values we used KNN method with value of K equals to sqrt(number of distinct values) .
+
+```{r}
+# change categorical values of Wind direction to numerical values for Correlation plot
+
+my_data[my_data=="C"]<-0
+my_data[my_data=="E"]<-9
+my_data[my_data=="S"]<-18
+my_data[my_data=="W"]<-27
+my_data[my_data=="N"]<-36
+my_data[my_data=="NNE"]<-2
+my_data[my_data=="ESE"]<-11
+my_data[my_data=="SSW"]<- 20
+my_data[my_data=="WNW"]<- 29
+my_data[my_data=="V"]<- 99
+my_data[my_data=="NE"]<- 5
+my_data[my_data=="SE"]<- 14
+my_data[my_data=="SW"]<- 23
+my_data[my_data=="NW"]<- 32
+my_data[my_data=="ENE"]<- 7
+my_data[my_data=="SSE"]<- 16
+my_data[my_data=="WSW"]<- 25
+my_data[my_data=="NNW"]<- 34
+
+my_data$Wind.direction <- as.numeric(as.character(my_data$Wind.direction))
+
+str(my_data)
+
+```
+```{r}
+source("http://www.sthda.com/upload/rquery_cormat.r")
+require("corrplot")
+rquery.cormat(my_data)
+
+```
+
+### Trend Analysis: <br />
+#### For both the methodologies, Mann Kendall Method and Sen's Slope Method, following hypotheses are used. 
+#### Null Hypothesis H0: The hypothesis being tested. A hypothesis for no change or no difference or no trend. 
+#### Alternate Hypothesis H1: Some departure from H0 that might be expected. The departure that one expects to see which means the trend exists.
+ 
+#### <br /> Mann-Kendall Method:<br />
+#### The M - K test is a statistical nonparametric test widely used for trend analysis in climatological and hydrological time series data. The test was suggested by Mann (1945) and has been extensively used with environmental time series. There are two advantages to use this test. First, it is a nonparametric test and does not require the data to be normally distributed. Second, the test has low sensitivity to abrupt breaks due to inhomogeneous time series. According to this test, the null hypothesis H0 assumes that there is no trend (the data is independent and randomly ordered). This is tested against the alternative hypothesis H1, which assumes that there is trend.
+This test has been calculated using Kendall package in R.
+
+
+#### <br /> Sen's Slope Method: <br />
+#### It is distribution free and not affected by seasonal fluctuations. This technique involves in arranging the collected data in the rank wise and scatter plotting and then calculating the median of those data. Based on that median of the data type of trend is decided. This test computes both the slope (i.e. linear rate of change) and confidence levels according to Sen's method.
+This test has been calculated using Trend package in R.
+
+
+#### Station wise Analysis: <br />
+
+#### In station wise analysis, the values of maximum temperature have been grouped together along the Year and Month and mean value is summarized for each of the seven stations. The graphs show the decomposition of maximum temperature across the years for the data, seasonal, trend and remainder for all the stations. The example graph for Amli shows the data distributions which are too random to detect the trends. Hence the statistical methods.
+
+<br />
+
+```{r echo=FALSE}
+library(tidyverse)
+library(tidyr)
+library("readxl")
+trend_analysis <- read_excel("FinalModifiedData.xlsx")
+tadata = data.frame(trend_analysis)
+Amli_data <- filter(tadata, Station.Code == 'Amli')
+df_Amli <- Amli_data %>% 
+            group_by(Year,Month) %>% 
+              dplyr::summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+TS_Amli = ts(df_Amli$Mean_MaxTemp,
+        frequency=12,
+        start=c(2000))
+plot(decompose(TS_Amli))
+```
+
+#### <br /> The results of our Mann-Kendall analysis are as follows: <br />
+```{r echo=FALSE}
+Result <- read_excel("Results_Station.xlsx")
+result_df = data.frame(Result)
+
+ggplot(data=result_df, aes(x=Station,y=MK_S)) + geom_col(fill = "brown", colour = "red") + labs(title = "Mann-Kendall Number per Station", y = "Mann-Kendall Number", x = "Station") +     theme(axis.text.x = element_text(face = "bold", size=12, angle = 30),
+          axis.text.y = element_text(face = "bold", size=12, angle=0),
+          plot.title = element_text(size=15), legend.position="None")
+
+```
+
+#### <br /> Stations Godsamba and Ukai have shown a significantly Increasing trend for Maximum temperature whereas Kakrapar and Amli have shown a significantly decreasing trend.
+
+#### <br /> The results of our Sen's Slope Analysis are as follows:
+```{r echo=FALSE}
+Result <- read_excel("Results_Station.xlsx")
+result_df = data.frame(Result)
+result_df$Station
+result_df$CI
+ggplot(data=result_df, aes(x=Station,y=SensSlope)) + geom_col(fill = "brown", colour = "red") + labs(title = "Sen's slope Number per Station", y = "Sen's Slope", x = "Station") +     theme(axis.text.x = element_text(face = "bold", size=12, angle = 30),
+          axis.text.y = element_text(face = "bold", size=12, angle=0),
+          plot.title = element_text(size=15), legend.position="None")
+```
+
+#### The values of Sen's slope and their respective 95% confidence Intervals are shown in the above tab. The 95% Confidence Interval reflects the range of sen's slope values for which the trend exists i.e. the alternate hypothesis is considered.
+
+#### <br /> Month wise Analysis: 
+#### In month wise analysis, the values of maximum temperature have been grouped together along the Month and Stations and mean value is summarized for each month. The figure shows the Mean maximum temperature for January for the entire data from 1999 to 2014 for above mentioned stations in that order. Black line represents the plot of the data and blue line represents the fitted line for the data. <br />
+
+```{r echo=FALSE}
+library(tidyverse)
+library("readxl")
+trend_analysis <- read_excel("FinalModifiedData.xlsx")
+tadata = data.frame(trend_analysis)
+keep <- c("Station.Code", "Month","Max.Temperature")
+df = tadata[keep]
+Jan_data <- filter(df, Month == 1)
+df_Jan <- Jan_data %>% 
+            group_by(Month, Station.Code) %>% 
+              dplyr::summarize(Mean_MaxTemp = mean(Max.Temperature, na.rm = TRUE))
+
+TS_Jan = ts(df_Jan$Mean_MaxTemp,
+        frequency=1,
+        start=c(1))
+
+plot(TS_Jan, ylab="Maximum Temperature", xlab="Stations", main="Maximum Temperature for January")
+lines(lowess(time(TS_Jan),TS_Jan), col='blue', lwd=2)
+```
+
+### Month wise results for Mann Kendall Method are shown below: <br />
+```{r echo=FALSE}
+library("readxl")
+Result <- read_excel("Results_DSWR.xlsx")
+result_df = data.frame(Result)
+ggplot(data=result_df, aes(x=factor(Month,levels = month.abb),y=MK_S),col=Month) + geom_col(fill = "brown", colour = "red") + labs(title = "Mann-Kendall Number per Month", y = "Mann-Kendall Number", x = "Month") +     theme(axis.text.x = element_text(face = "bold", size=12, angle = 30),
+          axis.text.y = element_text(face = "bold", size=12, angle=0),
+          plot.title = element_text(size=15), legend.position="None")
+```
+
+#### As per the study and the graphs shown in the Figure, January, March, April, May and June have a decreasing trend and July, August and September have a little significant increasing trend over the years.
+
+#### <br /> Month wise results for Sen's Slope are shown below: <br />
+```{r echo=FALSE}
+library("readxl")
+Result <- read_excel("Results_DSWR.xlsx")
+result_df = data.frame(Result)
+result_df$Month
+result_df$CI
+ggplot(data=result_df, aes(x=factor(Month,levels = month.abb),y=SensSlope),col=Month) + geom_col(fill = "brown", colour = "red") + labs(title = "Sen's Slope Value per Month", y = "Slope Value", x = "Month") +     theme(axis.text.x = element_text(face = "bold", size=12, angle = 30),
+          axis.text.y = element_text(face = "bold", size=12, angle=0),
+          plot.title = element_text(size=15), legend.position="None")
+```
+
+
+#### <br /> The values of Sen's slope and their respective 95% confidence Intervals are shown in the figure. They are all in sync with the results of Mann-Kendall methods except for values in August and September. In Mann-Kendall, the values are equal but in Sen's Slope, value of September is slightly less than August.
+
+### <br /> Predictive Analysis: <br />
+#### Linear Regression:  
+#### For predicting values of Max. temperature, we have used Linnear regression as one of the ML algorithms. <br />
+```{r}
+library("readxl")
+Result <- read_excel("Linear_Regression.xlsx")
+print(Result)
+
+```
+
+### <br /> Residuals:
+#### <br />Min:-11.4674 , 1Q:-1.6881,Median:-0.1421, 3Q:1.4923, Max:11.3346
+#### <br />Residual standard error: 2.601 on 53668 degrees of freedom 
+#### <br />Multiple R-squared: 0.4902,	Adjusted R-squared: 0.49 
+#### <br />F-statistic: 2064 on 25 and 53668 DF, p-value: < 2.2e-16
+#### <br />The larger the R-squared, the better the regression model fits your observations. As it is evident the R-squared values of the model is 0.49. In case of weather data R-squared value between 0.3-0.5 is considered good because max data depends on a lot of other factors, such as number of trees in that particular data and water bodies. Hence, R-squared value of 0.49 suggests a good linear fit for the weather data.
+
+### <br /> Regression Tree:
+#### <br /> Regression trees are a part of Decision trees that considers continuous values as the target variable. <br />
+#### The main goal of using a Regression tree was to build a model that can help in predicting the Max Temperature(target attribute) for our weather dataset because it has the inherent ability to perform feature selection.
+#### We have created two models, one is the Global model without any time variables and the other is the Local Model in which we have used the “Station code” as the main variable. The evaluation results inference is added in the Conclusion block.
+
+### <br /> Conclusion
+#### <br /> By combining both the analytical approaches, it can be insinuated that Regions around Kakrapar and Amli in the months of January, March, April, May and June can have very significant drop in the Maximum temperature values and on the other hand, Godsamba and Ukai can have very significant rise in the Maximum Temperature values in the months of July, August and September. This conclusion is based on the fact that the trends detected for the above mentioned regions and Months are either increasing or decreasing for both the regions and months values. The concerning industries can be helped with this analysis to plan their resources efficiently. Both the methods have detected the trends and Sen 's Slope values come under the confidence interval bracket which strengthens our hypothesis.
+
+#### <br /> Both the non-parametric approaches donot take into account the type of data distribution in the series. One of the problems in detecting and interpreting trends in hydrologic data is the Confounding effect of serial dependence. When it comes to the weather data, there are a lot of factors that are needed to be taken into consideration so as to provide a prominent analysis. For example, the number of trees in the area can severely affect the value of maximum temperature.
+
+#### <br /> For predicting the values of Maximum temperature, we used both linear regression and regression trees. And as evident from the R-squared values, the value in the range of 0.3-0.5 is considered good for weather data and hence our data fits well when it comes to linear regression.
+#### On the other hand, For the Regression trees, RMSE estimation values were under 3.0 for both the Global as well as the Local model, and Hence, in our suggestion, we can use the Global model for the future predictions of maximum temperature.
+
+
+### <br /> Links:
+Dataset: https://github.com/arvindjit03/WeatherDataAnalysisinR/blob/master/Weather_Data.xlsx?raw=true <br />
+Project Repository: https://github.com/arvindjit03/WeatherDataAnalysisinR/ <br />
+Website: https://sites.google.com/view/dswrweather/home <br />
+Screen Cast: https://www.youtube.com/watch?v=jZp-fKNxvwc
+
+### <br /> References:
+
+#### 1. Arora, M., Goel, N.K. and Singh, P. (2005) Evaluation of temperature trends over India. Hydrological Sciences Journal, 50, 8193.
+#### 2. Arpita Panda, Netrananda Sahu (2019) Trend analysis of rainfall and temperature pattern in Kalahandi, Bolangir and Koraput districts of Odisha, India, Atmospheric Science Letters.
+#### 3. Robert M. Hirsch, James R. Slack (1984) A non parametric trend test for seasonal data with serial dependence. Water Resources Research, Vol. 20, Issue 6, 727-732
+#### 4. Praveen Rathod (2014), A comparative study of methods used for rainfall trend analysis. Seminar 2014, M.Tech WRE.
+
+-----------------------------------------------------
+
+
+
